@@ -1,17 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import API from '../api/axios';
+import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
-import { LogOut, Plus, Trash2, Edit3, ShoppingBag, PlusCircle, Search, RefreshCw } from 'lucide-react';
+import {
+  LogOut, Plus, Trash2, Edit3, ShoppingBag, PlusCircle,
+  Search, RefreshCw, Car, Upload, Link2
+} from 'lucide-react';
 import './AuthStyles.css';
+
+const CATEGORY_COLORS = {
+  Sports: '#f59e0b', SUV: '#10b981', Sedan: '#6366f1',
+  Electric: '#06b6d4', Truck: '#8b5cf6', Hatchback: '#ec4899',
+  Convertible: '#f97316'
+};
+
+const EMPTY_FORM = { make: '', model: '', category: '', year: new Date().getFullYear(), price: '', quantity: '', description: '', image_url: '' };
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const [vehicles, setVehicles] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRestockOpen, setIsRestockOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [restockAmount, setRestockAmount] = useState(1);
+  const [formData, setFormData] = useState(EMPTY_FORM);
+  const [imageMode, setImageMode] = useState('url');
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef();
 
   const [searchMake, setSearchMake] = useState('');
   const [searchModel, setSearchModel] = useState('');
@@ -19,254 +37,288 @@ const Dashboard = () => {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
 
-  const [formData, setFormData] = useState({
-    make: '',
-    model: '',
-    category: '',
-    price: 0,
-    quantity: 0
-  });
-
   const isAdmin = user?.role === 'admin';
 
   const fetchVehicles = async () => {
-    try {
-      const response = await API.get('/vehicles');
-      setVehicles(response.data.data);
-    } catch (err) {
-      toast.error('Failed to load vehicles');
-    }
+    setLoading(true);
+    let query = supabase.from('vehicles').select('*').order('created_at', { ascending: false });
+    const { data, error } = await query;
+    if (error) toast.error('Failed to load vehicles: ' + error.message);
+    else setVehicles(data || []);
+    setLoading(false);
   };
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    try {
-      const params = {};
-      if (searchMake) params.make = searchMake;
-      if (searchModel) params.model = searchModel;
-      if (searchCategory) params.category = searchCategory;
-      if (minPrice) params.minPrice = minPrice;
-      if (maxPrice) params.maxPrice = maxPrice;
-
-      const response = await API.get('/vehicles/search', { params });
-      setVehicles(response.data.data);
-    } catch (err) {
-      toast.error('Search failed');
-    }
+    setLoading(true);
+    let query = supabase.from('vehicles').select('*');
+    if (searchMake) query = query.ilike('make', `%${searchMake}%`);
+    if (searchModel) query = query.ilike('model', `%${searchModel}%`);
+    if (searchCategory) query = query.ilike('category', `%${searchCategory}%`);
+    if (minPrice) query = query.gte('price', parseFloat(minPrice));
+    if (maxPrice) query = query.lte('price', parseFloat(maxPrice));
+    const { data, error } = await query.order('created_at', { ascending: false });
+    if (error) toast.error('Search failed');
+    else setVehicles(data || []);
+    setLoading(false);
   };
 
   const handleResetSearch = () => {
-    setSearchMake('');
-    setSearchModel('');
-    setSearchCategory('');
-    setMinPrice('');
-    setMaxPrice('');
+    setSearchMake(''); setSearchModel(''); setSearchCategory('');
+    setMinPrice(''); setMaxPrice('');
     fetchVehicles();
   };
 
   const handlePurchase = async (vehicleId) => {
-    try {
-      const response = await API.post(`/vehicles/${vehicleId}/purchase`);
-      toast.success(response.data.message);
-      fetchVehicles();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Purchase failed');
-    }
+    const { error } = await supabase.rpc('purchase_vehicle', { _vehicle_id: vehicleId, _quantity: 1 });
+    if (error) { toast.error(error.message); return; }
+    toast.success('Purchase successful!');
+    fetchVehicles();
   };
 
   const handleRestock = async (e) => {
     e.preventDefault();
-    try {
-      const response = await API.post(`/vehicles/${selectedVehicle._id}/restock`, {
-        quantity: parseInt(restockAmount)
-      });
-      toast.success(response.data.message);
-      setIsRestockOpen(false);
-      fetchVehicles();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Restock failed');
-    }
+    const { error } = await supabase.rpc('restock_vehicle', {
+      _vehicle_id: selectedVehicle.id,
+      _quantity: parseInt(restockAmount)
+    });
+    if (error) { toast.error(error.message); return; }
+    toast.success('Vehicle restocked!');
+    setIsRestockOpen(false);
+    fetchVehicles();
+  };
+
+  const uploadImage = async () => {
+    if (!imageFile) return formData.image_url;
+    setUploading(true);
+    const ext = imageFile.name.split('.').pop();
+    const fileName = `${Date.now()}.${ext}`;
+    const { data, error } = await supabase.storage
+      .from('vehicle-images')
+      .upload(fileName, imageFile, { cacheControl: '3600', upsert: false });
+    setUploading(false);
+    if (error) { toast.error('Image upload failed: ' + error.message); return formData.image_url; }
+    const { data: { publicUrl } } = supabase.storage.from('vehicle-images').getPublicUrl(data.path);
+    return publicUrl;
   };
 
   const handleSaveVehicle = async (e) => {
     e.preventDefault();
-    try {
-      if (selectedVehicle) {
-        await API.put(`/vehicles/${selectedVehicle._id}`, formData);
-        toast.success('Vehicle updated successfully');
-      } else {
-        await API.post('/vehicles', formData);
-        toast.success('Vehicle added successfully');
-      }
-      setIsModalOpen(false);
-      fetchVehicles();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to save vehicle');
+    const imageUrl = await uploadImage();
+    const payload = {
+      make: formData.make, model: formData.model, category: formData.category,
+      year: parseInt(formData.year), price: parseFloat(formData.price),
+      quantity: parseInt(formData.quantity), description: formData.description,
+      image_url: imageUrl || null,
+      created_by: user.id
+    };
+
+    let error;
+    if (selectedVehicle) {
+      ({ error } = await supabase.from('vehicles').update(payload).eq('id', selectedVehicle.id));
+    } else {
+      ({ error } = await supabase.from('vehicles').insert(payload));
     }
-  };
-
-  const handleDelete = async (vehicleId) => {
-    if (!window.confirm('Are you sure you want to delete this vehicle?')) return;
-    try {
-      await API.delete(`/vehicles/${vehicleId}`);
-      toast.success('Vehicle deleted successfully');
-      fetchVehicles();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Deletion failed');
-    }
-  };
-
-  const openAddModal = () => {
-    setSelectedVehicle(null);
-    setFormData({ make: '', model: '', category: '', price: 0, quantity: 0 });
-    setIsModalOpen(true);
-  };
-
-  const openEditModal = (vehicle) => {
-    setSelectedVehicle(vehicle);
-    setFormData({
-      make: vehicle.make,
-      model: vehicle.model,
-      category: vehicle.category,
-      price: vehicle.price,
-      quantity: vehicle.quantity
-    });
-    setIsModalOpen(true);
-  };
-
-  const openRestockModal = (vehicle) => {
-    setSelectedVehicle(vehicle);
-    setRestockAmount(1);
-    setIsRestockOpen(true);
-  };
-
-  useEffect(() => {
+    if (error) { toast.error(error.message); return; }
+    toast.success(selectedVehicle ? 'Vehicle updated!' : 'Vehicle added!');
+    setIsModalOpen(false);
     fetchVehicles();
-  }, []);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this vehicle permanently?')) return;
+    const { error } = await supabase.from('vehicles').delete().eq('id', id);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Vehicle deleted');
+    fetchVehicles();
+  };
+
+  const openAdd = () => {
+    setSelectedVehicle(null);
+    setFormData(EMPTY_FORM);
+    setImageFile(null); setImagePreview(''); setImageMode('url');
+    setIsModalOpen(true);
+  };
+
+  const openEdit = (v) => {
+    setSelectedVehicle(v);
+    setFormData({ make: v.make, model: v.model, category: v.category, year: v.year, price: v.price, quantity: v.quantity, description: v.description || '', image_url: v.image_url || '' });
+    setImageFile(null); setImagePreview(v.image_url || ''); setImageMode('url');
+    setIsModalOpen(true);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  useEffect(() => { fetchVehicles(); }, []);
 
   return (
-    <div style={{ padding: '24px', backgroundColor: 'var(--bg-primary)', minHeight: '100vh', color: 'var(--text-primary)' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
-        <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>Showroom Control</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Welcome, {user?.name} ({user?.role})</p>
+    <div style={{ backgroundColor: 'var(--bg-primary)', minHeight: '100vh', color: 'var(--text-primary)' }}>
+
+      <header style={{ padding: '20px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-secondary)', position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(10px)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Car size={28} style={{ color: 'var(--accent-color)' }} />
+          <div>
+            <h1 style={{ fontSize: '1.4rem', fontWeight: 800, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>AutoDrive Showroom</h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', margin: 0 }}>Welcome, <strong style={{ color: 'var(--text-secondary)' }}>{user?.name}</strong> · <span style={{ color: user?.role === 'admin' ? '#f59e0b' : 'var(--accent-color)', textTransform: 'capitalize' }}>{user?.role}</span></p>
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '10px' }}>
           {isAdmin && (
-            <button onClick={openAddModal} className="authButton" style={{ width: 'auto', padding: '10px 18px' }}>
-              <Plus size={18} />
-              Add Vehicle
+            <button onClick={openAdd} className="authButton" style={{ width: 'auto', padding: '9px 18px', fontSize: '0.88rem' }}>
+              <Plus size={16} /> Add Vehicle
             </button>
           )}
-          <button onClick={logout} className="authButton" style={{ width: 'auto', padding: '10px 18px', backgroundColor: 'var(--border-color)' }}>
-            <LogOut size={18} />
-            Logout
+          <button onClick={logout} className="authButton" style={{ width: 'auto', padding: '9px 18px', fontSize: '0.88rem', backgroundColor: 'transparent', border: '1px solid var(--border-color)' }}>
+            <LogOut size={16} /> Logout
           </button>
         </div>
       </header>
 
-      <section style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius)', padding: '24px', marginBottom: '32px' }}>
-        <form onSubmit={handleSearch} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', alignItems: 'end' }}>
-          <div className="formGroup" style={{ marginBottom: 0 }}>
-            <label className="formLabel">Make</label>
-            <input type="text" className="formInput" placeholder="Toyota, Ford..." value={searchMake} onChange={e => setSearchMake(e.target.value)} style={{ padding: '10px 12px' }} />
-          </div>
-          <div className="formGroup" style={{ marginBottom: 0 }}>
-            <label className="formLabel">Model</label>
-            <input type="text" className="formInput" placeholder="Camry, Mustang..." value={searchModel} onChange={e => setSearchModel(e.target.value)} style={{ padding: '10px 12px' }} />
-          </div>
-          <div className="formGroup" style={{ marginBottom: 0 }}>
-            <label className="formLabel">Category</label>
-            <input type="text" className="formInput" placeholder="Sedan, SUV..." value={searchCategory} onChange={e => setSearchCategory(e.target.value)} style={{ padding: '10px 12px' }} />
-          </div>
-          <div className="formGroup" style={{ marginBottom: 0 }}>
-            <label className="formLabel">Min Price</label>
-            <input type="number" className="formInput" placeholder="0" value={minPrice} onChange={e => setMinPrice(e.target.value)} style={{ padding: '10px 12px' }} />
-          </div>
-          <div className="formGroup" style={{ marginBottom: 0 }}>
-            <label className="formLabel">Max Price</label>
-            <input type="number" className="formInput" placeholder="100000" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} style={{ padding: '10px 12px' }} />
-          </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button type="submit" className="authButton" style={{ padding: '10px' }}>
-              <Search size={18} />
-            </button>
-            <button type="button" onClick={handleResetSearch} className="authButton" style={{ padding: '10px', backgroundColor: 'var(--border-color)' }}>
-              <RefreshCw size={18} />
-            </button>
-          </div>
-        </form>
-      </section>
-
-      <main style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
-        {vehicles.length === 0 ? (
-          <p style={{ textAlign: 'center', gridColumn: '1 / -1', color: 'var(--text-secondary)' }}>No vehicles matching your query</p>
-        ) : (
-          vehicles.map((v) => (
-            <div key={v._id} className="authCard" style={{ padding: '24px', maxWidth: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '320px' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--accent-color)', fontWeight: 600, letterSpacing: '0.05em' }}>{v.category}</span>
-                  <span style={{ fontSize: '0.9rem', color: v.quantity > 0 ? 'var(--success-color)' : 'var(--error-color)', fontWeight: 600 }}>
-                    {v.quantity > 0 ? `${v.quantity} in stock` : 'Out of stock'}
-                  </span>
-                </div>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>{v.make} {v.model}</h3>
-                <p style={{ fontSize: '1.6rem', fontWeight: 700, color: 'var(--text-primary)', margin: '16px 0' }}>${v.price.toLocaleString()}</p>
+      <div style={{ padding: '28px 32px' }}>
+        <section style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius)', padding: '20px', marginBottom: '28px' }}>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '12px', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Search & Filter</p>
+          <form onSubmit={handleSearch} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', alignItems: 'end' }}>
+            {[
+              { label: 'Make', v: searchMake, s: setSearchMake, ph: 'e.g. BMW' },
+              { label: 'Model', v: searchModel, s: setSearchModel, ph: 'e.g. M3' },
+              { label: 'Category', v: searchCategory, s: setSearchCategory, ph: 'e.g. SUV' },
+              { label: 'Min Price', v: minPrice, s: setMinPrice, ph: '0', t: 'number' },
+              { label: 'Max Price', v: maxPrice, s: setMaxPrice, ph: '200000', t: 'number' },
+            ].map(({ label, v, s, ph, t = 'text' }) => (
+              <div key={label} className="formGroup" style={{ marginBottom: 0 }}>
+                <label className="formLabel">{label}</label>
+                <input type={t} className="formInput" placeholder={ph} value={v} onChange={e => s(e.target.value)} style={{ padding: '9px 12px' }} />
               </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <button onClick={() => handlePurchase(v._id)} disabled={v.quantity <= 0} className="authButton" style={{ backgroundColor: v.quantity > 0 ? 'var(--accent-color)' : 'var(--border-color)' }}>
-                  <ShoppingBag size={18} />
-                  Purchase
-                </button>
-
-                {isAdmin && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginTop: '4px' }}>
-                    <button onClick={() => openEditModal(v)} className="authButton" style={{ padding: '8px', backgroundColor: 'var(--border-color)' }}>
-                      <Edit3 size={16} />
-                    </button>
-                    <button onClick={() => openRestockModal(v)} className="authButton" style={{ padding: '8px', backgroundColor: 'var(--border-color)' }}>
-                      <PlusCircle size={16} />
-                    </button>
-                    <button onClick={() => handleDelete(v._id)} className="authButton" style={{ padding: '8px', backgroundColor: 'rgba(239, 68, 68, 0.2)', border: '1px solid var(--error-color)', color: 'var(--error-color)' }}>
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                )}
-              </div>
+            ))}
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button type="submit" className="authButton" style={{ padding: '9px 14px' }}><Search size={16} /></button>
+              <button type="button" onClick={handleResetSearch} className="authButton" style={{ padding: '9px 14px', backgroundColor: 'var(--border-color)' }}><RefreshCw size={16} /></button>
             </div>
-          ))
+          </form>
+        </section>
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--text-secondary)' }}>Loading vehicles...</div>
+        ) : (
+          <main style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+            {vehicles.length === 0 ? (
+              <p style={{ textAlign: 'center', gridColumn: '1/-1', color: 'var(--text-muted)', padding: '60px 0' }}>No vehicles found.</p>
+            ) : vehicles.map((v) => {
+              const catColor = CATEGORY_COLORS[v.category] || 'var(--accent-color)';
+              return (
+                <div key={v.id} style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius)', overflow: 'hidden', display: 'flex', flexDirection: 'column', transition: 'transform 0.2s, box-shadow 0.2s' }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 16px 40px rgba(0,0,0,0.5)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}>
+
+                  {v.image_url ? (
+                    <div style={{ height: '180px', overflow: 'hidden' }}>
+                      <img src={v.image_url} alt={`${v.make} ${v.model}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
+                    </div>
+                  ) : (
+                    <div style={{ height: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-tertiary)' }}>
+                      <Car size={48} style={{ color: 'var(--border-color)' }} />
+                    </div>
+                  )}
+
+                  <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: catColor, fontWeight: 700, letterSpacing: '0.08em', background: `${catColor}18`, padding: '3px 10px', borderRadius: '999px' }}>{v.category}</span>
+                        <span style={{ fontSize: '0.8rem', color: v.quantity > 0 ? 'var(--success-color)' : 'var(--error-color)', fontWeight: 600 }}>
+                          {v.quantity > 0 ? `${v.quantity} in stock` : 'Out of stock'}
+                        </span>
+                      </div>
+                      <h3 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 2px' }}>{v.make} {v.model}</h3>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: '10px' }}>{v.year}</p>
+                      {v.description && <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: '12px', lineHeight: 1.5 }}>{v.description}</p>}
+                      <p style={{ fontSize: '1.6rem', fontWeight: 800, letterSpacing: '-0.02em', margin: '0 0 16px' }}>${Number(v.price).toLocaleString()}</p>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <button onClick={() => handlePurchase(v.id)} disabled={v.quantity <= 0} className="authButton"
+                        style={{ backgroundColor: v.quantity > 0 ? 'var(--accent-color)' : 'var(--border-color)', cursor: v.quantity <= 0 ? 'not-allowed' : 'pointer' }}>
+                        <ShoppingBag size={16} /> {v.quantity <= 0 ? 'Out of Stock' : 'Purchase'}
+                      </button>
+                      {isAdmin && (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                          <button onClick={() => openEdit(v)} className="authButton" style={{ padding: '7px', backgroundColor: 'var(--border-color)', fontSize: '0.78rem' }}><Edit3 size={13} /> Edit</button>
+                          <button onClick={() => { setSelectedVehicle(v); setRestockAmount(1); setIsRestockOpen(true); }} className="authButton" style={{ padding: '7px', backgroundColor: 'var(--border-color)', fontSize: '0.78rem' }}><PlusCircle size={13} /> Stock</button>
+                          <button onClick={() => handleDelete(v.id)} className="authButton" style={{ padding: '7px', backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid var(--error-color)', color: 'var(--error-color)', fontSize: '0.78rem' }}><Trash2 size={13} /></button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </main>
         )}
-      </main>
+      </div>
 
       {isModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.75)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div className="authCard" style={{ width: '480px' }}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(6px)', padding: '20px' }}>
+          <div className="authCard" style={{ width: '520px', maxHeight: '92vh', overflowY: 'auto' }}>
             <h2 className="authTitle" style={{ marginBottom: '24px' }}>{selectedVehicle ? 'Edit Vehicle' : 'Add New Vehicle'}</h2>
             <form onSubmit={handleSaveVehicle}>
-              <div className="formGroup">
-                <label className="formLabel">Make</label>
-                <input type="text" required className="formInput" placeholder="e.g. Ford" value={formData.make} onChange={e => setFormData({ ...formData, make: e.target.value })} style={{ padding: '10px 12px' }} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                {[
+                  { label: 'Make', key: 'make', ph: 'e.g. Porsche', t: 'text' },
+                  { label: 'Model', key: 'model', ph: 'e.g. 911', t: 'text' },
+                  { label: 'Category', key: 'category', ph: 'e.g. Sports', t: 'text' },
+                  { label: 'Year', key: 'year', ph: '2024', t: 'number' },
+                  { label: 'Price ($)', key: 'price', ph: '50000', t: 'number' },
+                  { label: 'Quantity', key: 'quantity', ph: '5', t: 'number' },
+                ].map(({ label, key, ph, t }) => (
+                  <div className="formGroup" key={key} style={{ marginBottom: 0 }}>
+                    <label className="formLabel">{label}</label>
+                    <input type={t} required className="formInput" placeholder={ph} value={formData[key]}
+                      onChange={e => setFormData({ ...formData, [key]: e.target.value })}
+                      style={{ padding: '9px 12px' }} />
+                  </div>
+                ))}
               </div>
-              <div className="formGroup">
-                <label className="formLabel">Model</label>
-                <input type="text" required className="formInput" placeholder="e.g. Focus" value={formData.model} onChange={e => setFormData({ ...formData, model: e.target.value })} style={{ padding: '10px 12px' }} />
+
+              <div className="formGroup" style={{ marginTop: '16px' }}>
+                <label className="formLabel">Description</label>
+                <textarea className="formInput" placeholder="Brief vehicle description..." rows={2}
+                  value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}
+                  style={{ padding: '9px 12px', resize: 'vertical', minHeight: '64px' }} />
               </div>
-              <div className="formGroup">
-                <label className="formLabel">Category</label>
-                <input type="text" required className="formInput" placeholder="e.g. Hatchback" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} style={{ padding: '10px 12px' }} />
+
+              <div className="formGroup" style={{ marginTop: '8px' }}>
+                <label className="formLabel">Vehicle Image</label>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                  <button type="button" onClick={() => setImageMode('url')} style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, background: imageMode === 'url' ? 'var(--accent-color)' : 'var(--border-color)', color: 'white' }}>
+                    <Link2 size={13} style={{ marginRight: 5 }} />URL
+                  </button>
+                  <button type="button" onClick={() => setImageMode('file')} style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, background: imageMode === 'file' ? 'var(--accent-color)' : 'var(--border-color)', color: 'white' }}>
+                    <Upload size={13} style={{ marginRight: 5 }} />Upload File
+                  </button>
+                </div>
+                {imageMode === 'url' ? (
+                  <input type="url" className="formInput" placeholder="https://example.com/car.jpg"
+                    value={formData.image_url} onChange={e => { setFormData({ ...formData, image_url: e.target.value }); setImagePreview(e.target.value); }}
+                    style={{ padding: '9px 12px' }} />
+                ) : (
+                  <div style={{ border: '2px dashed var(--border-color)', borderRadius: 'var(--border-radius)', padding: '20px', textAlign: 'center', cursor: 'pointer', backgroundColor: 'var(--bg-tertiary)' }}
+                    onClick={() => fileRef.current?.click()}>
+                    <Upload size={24} style={{ color: 'var(--text-muted)', marginBottom: '8px' }} />
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>{imageFile ? imageFile.name : 'Click to choose image file'}</p>
+                    <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
+                  </div>
+                )}
+                {imagePreview && (
+                  <img src={imagePreview} alt="Preview" style={{ marginTop: '10px', width: '100%', height: '140px', objectFit: 'cover', borderRadius: '8px' }} onError={e => e.target.style.display = 'none'} />
+                )}
               </div>
-              <div className="formGroup">
-                <label className="formLabel">Price ($)</label>
-                <input type="number" required className="formInput" value={formData.price} onChange={e => setFormData({ ...formData, price: parseFloat(e.target.value) })} style={{ padding: '10px 12px' }} />
-              </div>
-              <div className="formGroup">
-                <label className="formLabel">Quantity</label>
-                <input type="number" required className="formInput" value={formData.quantity} onChange={e => setFormData({ ...formData, quantity: parseInt(e.target.value) })} style={{ padding: '10px 12px' }} />
-              </div>
-              <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-                <button type="submit" className="authButton">Save</button>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                <button type="submit" className="authButton" disabled={uploading}>{uploading ? 'Uploading...' : 'Save Vehicle'}</button>
                 <button type="button" onClick={() => setIsModalOpen(false)} className="authButton" style={{ backgroundColor: 'var(--border-color)' }}>Cancel</button>
               </div>
             </form>
@@ -275,16 +327,16 @@ const Dashboard = () => {
       )}
 
       {isRestockOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.75)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(6px)' }}>
           <div className="authCard" style={{ width: '400px' }}>
-            <h2 className="authTitle" style={{ marginBottom: '24px' }}>Restock Vehicle</h2>
+            <h2 className="authTitle" style={{ marginBottom: '20px' }}>Restock Vehicle</h2>
             <form onSubmit={handleRestock}>
-              <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>Restocking: <strong>{selectedVehicle?.make} {selectedVehicle?.model}</strong></p>
+              <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>Restocking: <strong style={{ color: 'var(--text-primary)' }}>{selectedVehicle?.make} {selectedVehicle?.model}</strong></p>
               <div className="formGroup">
                 <label className="formLabel">Quantity to Add</label>
-                <input type="number" required min="1" className="formInput" value={restockAmount} onChange={e => setRestockAmount(parseInt(e.target.value))} style={{ padding: '10px 12px' }} />
+                <input type="number" required min="1" className="formInput" value={restockAmount} onChange={e => setRestockAmount(parseInt(e.target.value))} style={{ padding: '9px 12px' }} />
               </div>
-              <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
                 <button type="submit" className="authButton">Restock</button>
                 <button type="button" onClick={() => setIsRestockOpen(false)} className="authButton" style={{ backgroundColor: 'var(--border-color)' }}>Cancel</button>
               </div>
