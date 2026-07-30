@@ -1,89 +1,63 @@
-# Car Dealership Inventory System
+# AutoDrive (Torque Motors Showroom)
 
-A production-grade, full-stack Car Dealership Inventory System built using React (frontend) and Node.js + Express (backend) with MongoDB (Mongoose) database management.
+AutoDrive is a premium dealership inventory management system that tracks vehicles on the lot in real-time. It features a stunning, high-contrast, black-and-gold interface, providing a smooth and luxurious user experience.
 
 ## Features
-- **Secure Authentication**: JWT Access + Refresh token flow, httpOnly cookie refresh token rotation, password hashing, and custom Route Guards.
-- **Vehicle Catalog**: View all vehicles, search, and dynamically filter by make, model, category, and price range.
-- **Inventory Control**: Live stock management with "Purchase" operations (decrements quantity, disables button at 0) and "Restock" operations.
-- **Admin Dashboard**: Form utilities for authorized administrators to add, update, restock, and delete vehicles from the catalog.
+- **Real-Time Inventory Tracking:** Keep track of stock quantities, prices, and status.
+- **Advanced Search & Filtering:** Filter instantly by make, model, category, and price range.
+- **Admin Dashboard:** Add, edit, restock, and delete vehicles.
+- **Premium UI:** Glassmorphism, animations, and high-contrast color scheme.
+- **Supabase Backend:** Powered by PostgreSQL and Supabase Storage for fast, reliable data handling.
 
----
-
-## Getting Started
+## Setup Instructions
 
 ### Prerequisites
-- Node.js installed
-- MongoDB instance running
-
-### Backend Setup
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Create `.env` from `.env.example` and set your credentials:
-   ```bash
-   cp .env.example .env
-   ```
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
+- Node.js (v18+ recommended)
+- Supabase account (for database and storage)
 
 ### Frontend Setup
-1. Navigate to the frontend directory:
+1. Clone the repository: 
+   ```bash
+   git clone https://github.com/tajinder102005/placement_cardealership_final2.2.2.2.2.git
+   ```
+2. Navigate to the frontend directory: 
    ```bash
    cd frontend
    ```
-2. Install dependencies:
+3. Install dependencies: 
    ```bash
    npm install
    ```
-3. Start the application:
+4. Set up environment variables: Create a `.env` file in the frontend folder and add:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+5. Run the development server: 
    ```bash
    npm run dev
    ```
-4. Open your browser and navigate to: `http://localhost:5173`
+6. Open your browser and visit `http://localhost:5173`.
 
----
+### Backend Setup (Supabase)
+The backend is completely handled by Supabase. To replicate the database:
+1. Create a new Supabase project.
+2. Create a `vehicles` table with the following columns: `id` (uuid), `make` (text), `model` (text), `category` (text), `year` (int), `price` (numeric), `quantity` (int), `description` (text), `image_url` (text), `created_at` (timestamptz).
+3. Set up a Supabase Storage bucket named `vehicle-images` for storing car photos.
+4. Set up a few RPC functions (e.g. `purchase_vehicle`, `restock_vehicle`) for atomic quantity updates.
 
-## API Documentation
-
-### Auth Endpoints (`/api/auth`)
-
-| Endpoint | Method | Auth | Body | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `/register` | POST | Public | `name`, `email`, `password` | Register a new account. |
-| `/login` | POST | Public | `email`, `password` | Login to retrieve in-memory access token. |
-| `/logout` | POST | Public | - | Invalidate session cookies and revoke tokens. |
-
-### Vehicle Endpoints (`/api/vehicles`)
-
-| Endpoint | Method | Auth | Body / Query | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `/` | GET | Protected | - | Retrieve all vehicles. |
-| `/search` | GET | Protected | Query: `make`, `model`, `category`, `minPrice`, `maxPrice` | Filtered search query. |
-| `/` | POST | Protected (Admin) | `make`, `model`, `category`, `price`, `quantity` | Add a new vehicle. |
-| `/:id` | PUT | Protected (Admin) | `make`, `model`, `category`, `price`, `quantity` | Update vehicle specs. |
-| `/:id` | DELETE | Protected (Admin) | - | Remove vehicle. |
-| `/:id/purchase` | POST | Protected | - | Purchase one unit (decreases quantity by 1). |
-| `/:id/restock` | POST | Protected (Admin) | `quantity` | Restocks inventory. |
-
----
+## Screenshots
+*(Add screenshots of your application here)*
+- Landing Page Hero Section
+- Admin Dashboard
+- Real-time Search & Filter Bar
 
 ## My AI Usage
+I utilized an AI coding assistant to help build, design, and refine this project.
+- **UI/UX Design:** Used AI to generate a premium black-and-gold color scheme, implement glassmorphism, and align components professionally to match a provided mockup.
+- **Refactoring:** Replaced standard inputs with fully functioning React dropdowns and debounced real-time search handlers.
+- **Optimizations:** Changed state management to use optimistic UI updates so the dashboard doesn't flash when purchasing or restocking vehicles.
+- **CSS Styling:** Used AI to write intricate CSS flexbox and CSS grid logic for perfect responsive alignment.
 
-### AI Tools Used
-- **Antigravity AI IDE**: Leveraged as the primary pair-programming agent to design components, implement schemas, write validation guards, and structure consolidated Git commits.
-
-### How it was Used
-- **Scaffolding**: Used Antigravity to structure both the Express/Mongoose backend and the Vite/React frontend directories.
-- **Controllers & Middlewares**: Brainstormed and implemented the JWT cookie rotation flow, password hashing pre-save hooks, and role authentication controls.
-- **Consolidation**: Directed the AI to stage, organize, and commit files sequentially into 6 clean service-level commits with required git trailers.
-
-### Reflection
-The AI assistant drastically improved development velocity. By using Antigravity, we avoided manual boilerplate writing and context-switching, focusing instead on system architecture, secure endpoints validation, and clean component interactions.
+## Test Report
+*(If you have a testing suite like Jest/Vitest set up, paste the results here. Currently, the application is manually tested for visual alignment, optimistic UI updates, and backend sync.)*

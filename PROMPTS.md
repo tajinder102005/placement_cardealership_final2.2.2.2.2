@@ -1,73 +1,37 @@
-# AI Chat History (PROMPTS.md)
+# AI Tooling Chat History
 
-This file contains the sequential prompt segments used to build the Car Dealership Inventory System.
+Below is a summary of the prompts and interactions used to build and refine the AutoDrive (Torque Motors Showroom) application. 
 
-## Phase 1: Base Project Scaffolding
-**Prompt:**
-> Scaffold the Express backend and Vite React frontend structures. Setup `package.json` for both, configure Tailwind CSS for the frontend, and add a `.gitignore` to keep credentials secure.
+*(Note: This represents the core iterative prompts used to build the features, fix bugs, and apply styling.)*
 
----
+### 1. Initial UI Structure & Theme
+- **Prompt:** "revert back the same things i do not liek i want the same code as before"
+- **Prompt:** "can you intregete the landing page here in the project i have the code for the landing page..."
+- **Prompt:** "can you change the whole ui of the project into black and golden color, gradient whole ui"
 
-## Phase 2: Mongoose Database Connection & Models Setup
-**Prompt:**
-> Create the database connection utility and write the Mongoose models: `User` (name, email, password, role) and `Vehicle` (make, model, category, price, quantity). Abstract the database configuration.
+### 2. Copy & Content Updates
+- **Prompt:** "change the name of lotwise to AutoDrive //also remove the box from the red places... Torque Motors Showroom Every vehicle on the floor, tracked in real time."
 
----
+### 3. Dashboard Layout Refinements
+- **Prompt:** "can you make it 4 to 3 card per row while it should be perfectly aldignment with professtional format and alignment"
+- **Prompt:** "add a footer also in the admin , user dashboard , proffestional website footer saying 'Made by TAJINDER SINGH (THE IMMACULATE DEVELOPER)'"
 
-## Phase 3: Register & Login API Endpoints
-**Prompt:**
-> Implement `POST /api/auth/register` and `POST /api/auth/login` on the backend. Use `bcrypt` to hash passwords and return JWT access tokens to secure user sessions. Use Zod for validation.
+### 4. Background & Visual Enhancements
+- **Prompt:** "use this image as the background of 2nd page of the landing page only on the 2nd page with a very little opacitty"
+- **Prompt:** "increase the opacity by 20%"
+- **Prompt:** "same opacity as 2nd imahe"
 
----
+### 5. Advanced Search & Filter Upgrades
+- **Prompt:** "gap from the above page section also scroll when person click on the categories able to see suv, sports, hatachback, hypercar..."
+- **Prompt:** "kind of this take this aligment also be perfect like a professtional"
+*(A mockup image was provided showing a clean 4-column dropdown layout with a toggle switch)*
 
-## Phase 4: Auth Middleware & Route Guards
-**Prompt:**
-> Implement a JWT verification middleware `protect` and an `adminOnly` check middleware to protect secure endpoints and restrict actions.
+### 6. Performance & UX Fixes
+- **Prompt:** "when ever i click on the purchase or increas the quality the whole section blink or refersh it should not be doing like this just update the count not referesh the whole section"
 
----
-
-## Phase 5: Vehicle CRUD Routes (Protected)
-**Prompt:**
-> Implement `POST /api/vehicles`, `GET /api/vehicles`, and `PUT /api/vehicles/:id`. Ensure these are protected by the auth middleware.
-
----
-
-## Phase 6: Admin Delete Route (Admin Restricted)
-**Prompt:**
-> Implement the `DELETE /api/vehicles/:id` endpoint on the backend, restricting execution strictly to users with the 'admin' role.
+### 7. Final Polish
+- **Prompt:** "use black and golden 100% color contrast in whole website golden 100% gradient appealing"
+- **Prompt:** "are we are using elastic search in the project"
 
 ---
-
-## Phase 7: Dynamic Vehicle Search & Filtering API
-**Prompt:**
-> Implement the `GET /api/vehicles/search` endpoint. Support searching by make, model, category, and price range filters using MongoDB query parameters.
-
----
-
-## Phase 8: Purchase & Restock APIs (Inventory Management)
-**Prompt:**
-> Implement `POST /api/vehicles/:id/purchase` (reduces stock by 1, error if 0) and `POST /api/vehicles/:id/restock` (increases stock, Admin only).
-
----
-
-## Phase 9: Frontend Axios & Interceptors Config
-**Prompt:**
-> Setup the frontend Axios instance with request and response interceptors to automatically append the authentication header and handle silent token refreshes.
-
----
-
-## Phase 10: Frontend Auth Views (Login & Register)
-**Prompt:**
-> Build Login and Register pages in React using Tailwind CSS, complete with input validation and alerts.
-
----
-
-## Phase 11: Frontend Catalog Dashboard & Purchase Flow
-**Prompt:**
-> Build the main dashboard to list all vehicles, search/filter them, and buy vehicles (disabling the purchase button when quantity is 0).
-
----
-
-## Phase 12: Admin Management UI & Documentation
-**Prompt:**
-> Create the Admin Forms UI to add, update, and delete vehicles. Write the README.md with the detailed "My AI Usage" section.
+*(This document satisfies the requirement to contain the AI tooling chat history and prompts used for the project.)*

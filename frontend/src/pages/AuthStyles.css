@@ -89,21 +89,24 @@
 .authButton {
   width: 100%;
   padding: 14px;
-  background-color: var(--accent-color);
-  color: white;
+  background: var(--gold-gradient);
+  color: #000000;
   border: none;
   border-radius: var(--border-radius);
   font-size: 1rem;
-  font-weight: 600;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  font-weight: 700;
+  transition: all 0.2s ease;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 8px;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
 }
 
 .authButton:hover:not(:disabled) {
-  background-color: var(--accent-hover);
+  background: var(--gold-gradient-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.35);
 }
 
 .authButton:disabled {

@@ -29,59 +29,60 @@ const Dashboard = () => {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef();
 
-  const [searchMake, setSearchMake] = useState('');
-  const [searchModel, setSearchModel] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [searchCategory, setSearchCategory] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
+  const [sortOrder, setSortOrder] = useState('newest');
+  const [availableOnly, setAvailableOnly] = useState(false);
 
   const isAdmin = user?.role === 'admin';
 
-  const fetchVehicles = async () => {
-    setLoading(true);
-    let query = supabase.from('vehicles').select('*').order('created_at', { ascending: false });
-    const { data, error } = await query;
-    if (error) toast.error('Failed to load vehicles: ' + error.message);
-    else setVehicles(data || []);
-    setLoading(false);
-  };
-
-  const handleSearch = async (e) => {
-    e.preventDefault();
+  const fetchVehicles = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
     setLoading(true);
     let query = supabase.from('vehicles').select('*');
-    if (searchMake) query = query.ilike('make', `%${searchMake}%`);
-    if (searchModel) query = query.ilike('model', `%${searchModel}%`);
+    
+    if (searchQuery) query = query.or(`make.ilike.%${searchQuery}%,model.ilike.%${searchQuery}%,category.ilike.%${searchQuery}%`);
     if (searchCategory) query = query.ilike('category', `%${searchCategory}%`);
     if (minPrice) query = query.gte('price', parseFloat(minPrice));
     if (maxPrice) query = query.lte('price', parseFloat(maxPrice));
-    const { data, error } = await query.order('created_at', { ascending: false });
-    if (error) toast.error('Search failed');
+    if (availableOnly) query = query.gt('quantity', 0);
+
+    if (sortOrder === 'newest') query = query.order('created_at', { ascending: false });
+    else if (sortOrder === 'price-asc') query = query.order('price', { ascending: true });
+    else if (sortOrder === 'price-desc') query = query.order('price', { ascending: false });
+
+    const { data, error } = await query;
+    if (error) toast.error('Search failed: ' + error.message);
     else setVehicles(data || []);
     setLoading(false);
   };
+  const handleSearch = fetchVehicles;
+
+  useEffect(() => {
+    const delay = setTimeout(() => { fetchVehicles(); }, 400);
+    return () => clearTimeout(delay);
+  }, [searchQuery, searchCategory, minPrice, maxPrice, sortOrder, availableOnly]);
 
   const handleResetSearch = () => {
-    setSearchMake(''); setSearchModel(''); setSearchCategory('');
+    setSearchQuery(''); setSearchCategory('');
     setMinPrice(''); setMaxPrice('');
-    fetchVehicles();
+    setSortOrder('newest'); setAvailableOnly(false);
   };
 
   const handlePurchase = async (vehicleId) => {
+    setVehicles(prev => prev.map(v => v.id === vehicleId ? { ...v, quantity: Math.max(0, (v.quantity || 0) - 1) } : v));
     const { error } = await supabase.rpc('purchase_vehicle', { _vehicle_id: vehicleId, _quantity: 1 });
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(error.message); fetchVehicles(); return; }
     toast.success('Purchase successful!');
-    fetchVehicles();
   };
 
   const handleRestock = async (vehicleId) => {
-    const { error } = await supabase.rpc('restock_vehicle', {
-      _vehicle_id: vehicleId,
-      _quantity: 1
-    });
-    if (error) { toast.error(error.message); return; }
+    setVehicles(prev => prev.map(v => v.id === vehicleId ? { ...v, quantity: (v.quantity || 0) + 1 } : v));
+    const { error } = await supabase.rpc('restock_vehicle', { _vehicle_id: vehicleId, _quantity: 1 });
+    if (error) { toast.error(error.message); fetchVehicles(); return; }
     toast.success('Added 1 unit to stock!');
-    fetchVehicles();
   };
 
   const uploadImage = async () => {
@@ -123,10 +124,10 @@ const Dashboard = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this vehicle permanently?')) return;
+    setVehicles(prev => prev.filter(v => v.id !== id));
     const { error } = await supabase.from('vehicles').delete().eq('id', id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(error.message); fetchVehicles(); return; }
     toast.success('Vehicle deleted');
-    fetchVehicles();
   };
 
   const openAdd = () => {
@@ -258,26 +259,66 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div style={{ padding: '0 32px 32px' }}>
-        <section style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius)', padding: '20px', marginBottom: '28px', maxWidth: '1200px', margin: '0 auto 28px' }}>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '12px', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Search & Filter</p>
-          <form onSubmit={handleSearch} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', alignItems: 'end' }}>
-            {[
-              { label: 'Make', v: searchMake, s: setSearchMake, ph: 'e.g. BMW' },
-              { label: 'Model', v: searchModel, s: setSearchModel, ph: 'e.g. M3' },
-              { label: 'Category', v: searchCategory, s: setSearchCategory, ph: 'e.g. SUV' },
-              { label: 'Min Price', v: minPrice, s: setMinPrice, ph: '0', t: 'number' },
-              { label: 'Max Price', v: maxPrice, s: setMaxPrice, ph: '200000', t: 'number' },
-            ].map(({ label, v, s, ph, t = 'text' }) => (
-              <div key={label} className="formGroup" style={{ marginBottom: 0 }}>
-                <label className="formLabel">{label}</label>
-                <input type={t} className="formInput" placeholder={ph} value={v} onChange={e => s(e.target.value)} style={{ padding: '9px 12px' }} />
+      <div style={{ padding: '60px 32px 32px' }}>
+        <section style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '24px', marginBottom: '28px', maxWidth: '1200px', margin: '0 auto 28px' }}>
+          <form onSubmit={handleSearch} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* Top Row */}
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <div className="formGroup" style={{ flex: '2', minWidth: '280px', marginBottom: 0 }}>
+                <label className="formLabel" style={{ fontSize: '0.75rem' }}>SEARCH</label>
+                <div style={{ position: 'relative' }}>
+                  <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                  <input type="text" className="formInput" placeholder="Search by make, model or category" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ padding: '9px 12px 9px 36px' }} />
+                </div>
               </div>
-            ))}
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button type="submit" className="authButton" style={{ padding: '9px 14px' }}><Search size={16} /></button>
-              <button type="button" onClick={handleResetSearch} className="authButton" style={{ padding: '9px 14px', backgroundColor: 'var(--border-color)' }}><RefreshCw size={16} /></button>
+
+              <div className="formGroup" style={{ flex: '1', minWidth: '160px', marginBottom: 0 }}>
+                <label className="formLabel" style={{ fontSize: '0.75rem' }}>CATEGORY</label>
+                <select className="formInput" value={searchCategory || ''} onChange={e => setSearchCategory(e.target.value)} style={{ padding: '9px 12px', cursor: 'pointer', appearance: 'auto' }}>
+                  <option value="">All categories</option>
+                  <option value="Sports">Sports</option>
+                  <option value="SUV">SUV</option>
+                  <option value="Sedan">Sedan</option>
+                  <option value="Electric">Electric</option>
+                  <option value="Truck">Truck</option>
+                  <option value="Hatchback">Hatchback</option>
+                  <option value="Convertible">Convertible</option>
+                  <option value="Hypercar">Hypercar</option>
+                </select>
+              </div>
+
+              <div className="formGroup" style={{ flex: '1.2', minWidth: '200px', marginBottom: 0 }}>
+                <label className="formLabel" style={{ fontSize: '0.75rem' }}>PRICE RANGE</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input type="number" className="formInput" placeholder="Min" value={minPrice} onChange={e => setMinPrice(e.target.value)} style={{ padding: '9px 12px' }} />
+                  <span style={{ color: 'var(--text-muted)' }}>-</span>
+                  <input type="number" className="formInput" placeholder="Max" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} style={{ padding: '9px 12px' }} />
+                </div>
+              </div>
+
+              <div className="formGroup" style={{ flex: '1', minWidth: '140px', marginBottom: 0 }}>
+                <label className="formLabel" style={{ fontSize: '0.75rem' }}>SORT</label>
+                <select className="formInput" value={sortOrder} onChange={e => setSortOrder(e.target.value)} style={{ padding: '9px 12px', cursor: 'pointer', appearance: 'auto' }}>
+                  <option value="newest">Newest first</option>
+                  <option value="price-asc">Price: Low to High</option>
+                  <option value="price-desc">Price: High to Low</option>
+                </select>
+              </div>
             </div>
+
+            {/* Bottom Row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                <input type="checkbox" checked={availableOnly} onChange={e => setAvailableOnly(e.target.checked)} style={{ appearance: 'none', width: '40px', height: '22px', backgroundColor: availableOnly ? 'var(--accent-color)' : 'var(--bg-tertiary)', borderRadius: '20px', position: 'relative', outline: 'none', cursor: 'pointer', transition: 'background-color 0.2s', padding: 0, margin: 0, border: '1px solid var(--border-color)' }} className="toggleSwitch" />
+                Available only
+              </label>
+
+              <button type="button" onClick={handleResetSearch} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }}>
+                <span style={{ fontSize: '1.2rem', lineHeight: 0, marginTop: '-2px' }}>&times;</span> Clear filters
+              </button>
+            </div>
+            
+            <style>{`.toggleSwitch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background-color: ${availableOnly ? '#1a0d02' : 'var(--text-muted)'}; border-radius: 50%; transition: transform 0.2s; transform: translateX(${availableOnly ? '18px' : '0'}); }`}</style>
           </form>
         </section>
 

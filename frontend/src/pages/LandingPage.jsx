@@ -372,14 +372,19 @@ const CSS = `
 
 /* BUTTONS */
 .lw-btn-primary {
-  background: ${COLORS.amber}; color: #1a0d02; border: none;
-  font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14.5px;
+  background: linear-gradient(135deg, #d4af37 0%, #ffdf73 50%, #b38728 100%);
+  color: #000000; border: none;
+  font-family: 'Inter', sans-serif; font-weight: 700; font-size: 14.5px;
   padding: 12px 20px; border-radius: 8px; cursor: pointer;
   display: inline-flex; align-items: center; gap: 8px;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
-  box-shadow: 0 0 0 0 rgba(255,122,26,0);
+  box-shadow: 0 4px 15px rgba(212,175,55,0.25);
 }
-.lw-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px -8px ${COLORS.amber}aa; }
+.lw-btn-primary:hover { 
+  background: linear-gradient(135deg, #ffdf73 0%, #d4af37 50%, #fcd555 100%);
+  transform: translateY(-2px); 
+  box-shadow: 0 6px 20px rgba(212,175,55,0.4); 
+}
 .lw-btn-small { padding: 9px 16px; font-size: 13.5px; }
 .lw-btn-ghost {
   background: transparent; color: ${COLORS.paper};
