@@ -1,12 +1,12 @@
-# Production-Grade Authentication System
+# Car Dealership Inventory System
 
-This project contains a production-grade authentication module using React (frontend) and Node.js + Express (backend), implementing professional security standards and workflows.
+A production-grade, full-stack Car Dealership Inventory System built using React (frontend) and Node.js + Express (backend) with MongoDB (Mongoose) database management.
 
 ## Features
-- **Backend structure**: routes, controllers, models, middleware, utils, and config pattern.
-- **Full JWT workflow**: short-lived access token, long-lived refresh token in an HTTP-only cookie, and rotation.
-- **Security features**:bcrypt password hashing, express-rate-limit, input validation with Zod, and cookies configured for security.
-- **Frontend architecture**: global authentication context, route guards, automatic token refresh via Axios interceptors, responsive and animated UI with Tailwind/CSS Modules style.
+- **Secure Authentication**: JWT Access + Refresh token flow, httpOnly cookie refresh token rotation, password hashing, and custom Route Guards.
+- **Vehicle Catalog**: View all vehicles, search, and dynamically filter by make, model, category, and price range.
+- **Inventory Control**: Live stock management with "Purchase" operations (decrements quantity, disables button at 0) and "Restock" operations.
+- **Admin Dashboard**: Form utilities for authorized administrators to add, update, restock, and delete vehicles from the catalog.
 
 ---
 
@@ -17,7 +17,7 @@ This project contains a production-grade authentication module using React (fron
 - MongoDB instance running
 
 ### Backend Setup
-1. Open a terminal and navigate to the backend directory:
+1. Navigate to the backend directory:
    ```bash
    cd backend
    ```
@@ -25,17 +25,17 @@ This project contains a production-grade authentication module using React (fron
    ```bash
    npm install
    ```
-3. Set environment variables by copying `.env.example` to `.env` and adjusting values:
+3. Create `.env` from `.env.example` and set your credentials:
    ```bash
    cp .env.example .env
    ```
-4. Start the server:
+4. Start the development server:
    ```bash
    npm run dev
    ```
 
 ### Frontend Setup
-1. Open a new terminal and navigate to the frontend directory:
+1. Navigate to the frontend directory:
    ```bash
    cd frontend
    ```
@@ -55,17 +55,35 @@ This project contains a production-grade authentication module using React (fron
 
 ### Auth Endpoints (`/api/auth`)
 
-| Endpoint | Method | Auth | Body | Response | Description |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| `/register` | POST | Public | `name`, `email`, `password` | `{ success, message, data }` | Creates a new user and logs verification link. |
-| `/login` | POST | Public | `email`, `password` | `{ success, message, data }` | Validates credentials and sets HTTP-only cookie. |
-| `/logout` | POST | Public | - | `{ success, message, data }` | Clears credentials from database and cookie. |
-| `/refresh-token`| POST | Public | - | `{ success, message, data }` | Rotates refresh token & issues new access token. |
-| `/verify-email` | GET | Public | query: `token` | `{ success, message, data }` | Verifies user's registration. |
-| `/forgot-password`|POST | Public | `email` | `{ success, message, data }` | Requests recovery mail/log. |
-| `/reset-password`| POST | Public | `token`, `password` | `{ success, message, data }` | Resets password and revokes previous tokens. |
+| Endpoint | Method | Auth | Body | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `/register` | POST | Public | `name`, `email`, `password` | Register a new account. |
+| `/login` | POST | Public | `email`, `password` | Login to retrieve in-memory access token. |
+| `/logout` | POST | Public | - | Invalidate session cookies and revoke tokens. |
 
-### Protected API Resource
-- **Endpoint**: `/api/protected`
-- **Method**: GET
-- **Auth**: Protected (Requires Bearer Token in `Authorization` Header)
+### Vehicle Endpoints (`/api/vehicles`)
+
+| Endpoint | Method | Auth | Body / Query | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `/` | GET | Protected | - | Retrieve all vehicles. |
+| `/search` | GET | Protected | Query: `make`, `model`, `category`, `minPrice`, `maxPrice` | Filtered search query. |
+| `/` | POST | Protected (Admin) | `make`, `model`, `category`, `price`, `quantity` | Add a new vehicle. |
+| `/:id` | PUT | Protected (Admin) | `make`, `model`, `category`, `price`, `quantity` | Update vehicle specs. |
+| `/:id` | DELETE | Protected (Admin) | - | Remove vehicle. |
+| `/:id/purchase` | POST | Protected | - | Purchase one unit (decreases quantity by 1). |
+| `/:id/restock` | POST | Protected (Admin) | `quantity` | Restocks inventory. |
+
+---
+
+## My AI Usage
+
+### AI Tools Used
+- **Antigravity AI IDE**: Leveraged as the primary pair-programming agent to design components, implement schemas, write validation guards, and structure consolidated Git commits.
+
+### How it was Used
+- **Scaffolding**: Used Antigravity to structure both the Express/Mongoose backend and the Vite/React frontend directories.
+- **Controllers & Middlewares**: Brainstormed and implemented the JWT cookie rotation flow, password hashing pre-save hooks, and role authentication controls.
+- **Consolidation**: Directed the AI to stage, organize, and commit files sequentially into 6 clean service-level commits with required git trailers.
+
+### Reflection
+The AI assistant drastically improved development velocity. By using Antigravity, we avoided manual boilerplate writing and context-switching, focusing instead on system architecture, secure endpoints validation, and clean component interactions.
