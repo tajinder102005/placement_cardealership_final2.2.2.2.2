@@ -185,12 +185,35 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <div style={{ padding: '28px 32px' }}>
-        <div style={{ marginBottom: '32px' }}>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 700, marginBottom: '6px' }}>Showroom overview</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '24px' }}>Welcome back, {user?.name?.split(' ')[0]} — here's how the lot is looking today.</p>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+      <div style={{
+        position: 'relative',
+        padding: '60px 32px 40px',
+        backgroundImage: 'url("https://f1rst-motors.s3.me-central-1.amazonaws.com/cars/1749892604112-_DSC0296.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(17,14,5,0.95) 100%)',
+          zIndex: 0
+        }} />
+        
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ marginBottom: '40px', maxWidth: '700px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--accent-color)', letterSpacing: '0.03em', marginBottom: '16px', background: 'rgba(20,17,10,0.6)', padding: '6px 12px', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--accent-color)' }}></span> Torque Motors Showroom
+            </div>
+            <h1 style={{ fontSize: '3.2rem', fontWeight: 700, margin: '0 0 16px', lineHeight: 1.1, fontFamily: 'Oswald, sans-serif', textTransform: 'uppercase' }}>
+              Every vehicle <span style={{ color: 'var(--accent-color)' }}>on the floor</span>, tracked in real time.
+            </h1>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', lineHeight: 1.6, margin: 0 }}>
+              Torque Motors keeps stock, pricing and sales in sync. Browse the showroom, filter down to the exact spec, and purchase the moment a unit is available.
+            </p>
+          </div>
+
+          <div style={{ marginBottom: '10px' }}>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '16px' }}>Showroom overview</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
             <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ background: 'rgba(212, 175, 55, 0.1)', width: '38px', height: '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-color)' }}>
                 <Layers size={18} />
@@ -230,10 +253,13 @@ const Dashboard = () => {
                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '8px' }}>Floor value</div>
               </div>
             </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        <section style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius)', padding: '20px', marginBottom: '28px' }}>
+      <div style={{ padding: '0 32px 32px' }}>
+        <section style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius)', padding: '20px', marginBottom: '28px', maxWidth: '1200px', margin: '0 auto 28px' }}>
           <p style={{ color: 'var(--text-muted)', marginBottom: '12px', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Search & Filter</p>
           <form onSubmit={handleSearch} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', alignItems: 'end' }}>
             {[
@@ -258,7 +284,7 @@ const Dashboard = () => {
         {loading ? (
           <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--text-secondary)' }}>Loading vehicles...</div>
         ) : (
-          <main style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+          <main style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '24px', maxWidth: '1200px', margin: '0 auto' }}>
             {vehicles.length === 0 ? (
               <p style={{ textAlign: 'center', gridColumn: '1/-1', color: 'var(--text-muted)', padding: '60px 0' }}>No vehicles found.</p>
             ) : vehicles.map((v) => {
@@ -312,6 +338,23 @@ const Dashboard = () => {
           </main>
         )}
       </div>
+
+      <footer style={{ 
+        borderTop: '1px solid var(--border-color)', 
+        padding: '32px 24px', 
+        marginTop: '20px',
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        background: 'var(--bg-secondary)',
+        color: 'var(--text-muted)',
+        fontSize: '0.85rem',
+        letterSpacing: '0.05em',
+        textTransform: 'uppercase',
+        fontWeight: 600
+      }}>
+        Made by TAJINDER SINGH (THE IMMACULATE DEVELOPER)
+      </footer>
 
       {isModalOpen && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(6px)', padding: '20px' }}>

@@ -174,7 +174,7 @@ function Hero({ onGetStarted }) {
                     className="lw-hero-cta"
                 >
                     <button className="lw-btn-primary" onClick={() => onGetStarted("signup")}>
-                        Start free trial <ArrowRight size={17} strokeWidth={2.5} />
+                        Sign up <ArrowRight size={17} strokeWidth={2.5} />
                     </button>
                     <button className="lw-btn-ghost" onClick={() => onGetStarted("login")}>
                         Log in
@@ -183,8 +183,10 @@ function Hero({ onGetStarted }) {
             </div>
 
             <FloatingCard v={CARDS[0]} delay={0.5} style={{ top: "14%", right: "8%" }} />
-            <FloatingCard v={CARDS[1]} delay={0.9} style={{ top: "52%", right: "20%" }} />
-            <FloatingCard v={CARDS[2]} delay={1.2} style={{ top: "34%", right: "34%" }} />
+            <FloatingCard v={CARDS[1]} delay={0.9} style={{ top: "60%", right: "10%" }} />
+            <FloatingCard v={CARDS[2]} delay={1.2} style={{ top: "20%", left: "8%" }} />
+            <FloatingCard v={CARDS[3]} delay={1.5} style={{ top: "65%", left: "5%" }} />
+            <FloatingCard v={CARDS[0]} delay={1.8} style={{ top: "70%", right: "42%" }} />
         </section>
     );
 }
@@ -208,7 +210,7 @@ export default function LandingPage() {
                 <div className="lw-nav-inner">
                     <div className="lw-logo">
                         <span className="lw-logo-mark"><Car size={17} strokeWidth={2.5} /></span>
-                        Lotwise
+                        AutoDrive
                     </div>
                     <nav className="lw-nav-links">
                         <a href="#features">Features</a>
@@ -236,58 +238,82 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            <section id="features" className="lw-section">
-                <div className="lw-section-head">
-                    <span className="lw-kicker">The board</span>
-                    <h2 className="lw-h2">One system, from intake to sold</h2>
-                    <p className="lw-section-sub">
-                        Everything a dealership's inventory touches — scanning, photos, pricing, transfers,
-                        reporting — lives on the same stock number.
-                    </p>
+            <div style={{
+                position: 'relative',
+                backgroundImage: 'url("https://ballerbossez.com/wp-content/uploads/2025/01/5.-luxury-cars-in-china.jpg")',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundAttachment: 'fixed'
+            }}>
+                <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.72)' }} />
+                <div style={{ position: 'relative', zIndex: 1, paddingBottom: '60px' }}>
+                    <section id="features" className="lw-section">
+                        <div className="lw-section-head">
+                            <span className="lw-kicker">The board</span>
+                            <h2 className="lw-h2">One system, from intake to sold</h2>
+                            <p className="lw-section-sub">
+                                Everything a dealership's inventory touches — scanning, photos, pricing, transfers,
+                                reporting — lives on the same stock number.
+                            </p>
+                        </div>
+                        <div className="lw-features-grid">
+                            {FEATURES.map((f, i) => (
+                                <motion.div
+                                    key={f.title}
+                                    className="lw-feature-card"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true, margin: "-60px" }}
+                                    transition={{ duration: 0.5, delay: i * 0.05 }}
+                                    style={{ backgroundColor: 'rgba(10, 8, 5, 0.6)', backdropFilter: 'blur(10px)' }}
+                                >
+                                    <div className="lw-feature-icon"><f.icon size={19} strokeWidth={2} /></div>
+                                    <h3>{f.title}</h3>
+                                    <p>{f.body}</p>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </section>
                 </div>
-                <div className="lw-features-grid">
-                    {FEATURES.map((f, i) => (
-                        <motion.div
-                            key={f.title}
-                            className="lw-feature-card"
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, margin: "-60px" }}
-                            transition={{ duration: 0.5, delay: i * 0.05 }}
-                        >
-                            <div className="lw-feature-icon"><f.icon size={19} strokeWidth={2} /></div>
-                            <h3>{f.title}</h3>
-                            <p>{f.body}</p>
-                        </motion.div>
-                    ))}
-                </div>
-            </section>
+            </div>
 
-            <section id="how" className="lw-section lw-how">
-                <div className="lw-section-head">
-                    <span className="lw-kicker">The flow</span>
-                    <h2 className="lw-h2">How a unit moves through Lotwise</h2>
+            <div style={{
+                position: 'relative',
+                backgroundImage: 'url("https://d1pmvr35o5z8zp.cloudfront.net/assets/header_fnl_-1728959733.webp")',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundAttachment: 'fixed'
+            }}>
+                <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.72)' }} />
+                <div style={{ position: 'relative', zIndex: 1, paddingBottom: '80px' }}>
+                    <section id="how" className="lw-section lw-how">
+                        <div className="lw-section-head">
+                            <span className="lw-kicker">The flow</span>
+                            <h2 className="lw-h2">How a unit moves through Torque Motors</h2>
+                        </div>
+                        <div className="lw-steps" style={{ backgroundColor: 'rgba(10, 8, 5, 0.5)', backdropFilter: 'blur(12px)', padding: '40px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                            {STEPS.map((s, i) => (
+                                <motion.div
+                                    key={s.n}
+                                    className="lw-step"
+                                    initial={{ opacity: 0, x: -16 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    viewport={{ once: true, margin: "-60px" }}
+                                    transition={{ duration: 0.5, delay: i * 0.08 }}
+                                    style={{ borderBottom: i < STEPS.length - 1 ? '1px solid var(--border-color)' : 'none' }}
+                                >
+                                    <span className="lw-step-n">{s.n}</span>
+                                    <div>
+                                        <h3 style={{ color: 'var(--paper)' }}>{s.title}</h3>
+                                        <p style={{ color: 'var(--text-secondary)' }}>{s.body}</p>
+                                    </div>
+                                    {i < STEPS.length - 1 && <span className="lw-step-line" />}
+                                </motion.div>
+                            ))}
+                        </div>
+                    </section>
                 </div>
-                <div className="lw-steps">
-                    {STEPS.map((s, i) => (
-                        <motion.div
-                            key={s.n}
-                            className="lw-step"
-                            initial={{ opacity: 0, x: -16 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true, margin: "-60px" }}
-                            transition={{ duration: 0.5, delay: i * 0.08 }}
-                        >
-                            <span className="lw-step-n">{s.n}</span>
-                            <div>
-                                <h3>{s.title}</h3>
-                                <p>{s.body}</p>
-                            </div>
-                            {i < STEPS.length - 1 && <span className="lw-step-line" />}
-                        </motion.div>
-                    ))}
-                </div>
-            </section>
+            </div>
 
             <footer className="lw-footer">
                 <div className="lw-logo"><Car size={20} color={COLORS.amber} /> Torque Motors</div>
