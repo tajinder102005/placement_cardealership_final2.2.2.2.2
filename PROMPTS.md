@@ -1,5 +1,97 @@
 # AI Tooling Chat History & Prompts
 
+## Core Development Prompts
+
+### 1. Principal Software Engineer & Architecture Setup
+**User Prompt:**
+> Act as a Principal Software Engineer at Google with 15+ years of experience building scalable backend systems.
+>
+> Build a production-ready backend for a Car Dealership Inventory System using Node.js, TypeScript, Express.js, PostgreSQL, Prisma ORM, JWT Authentication, bcrypt, Jest, and Supertest.
+>
+> This project MUST strictly follow Test-Driven Development (TDD):
+> - Write failing tests before implementation.
+> - Follow the Red → Green → Refactor workflow.
+> - Keep commits small and TDD-friendly.
+> - Aim for high test coverage.
+>
+> Architecture Requirements:
+> - Clean Architecture
+> - SOLID Principles
+> - Repository Pattern
+> - Service Layer
+> - Dependency Injection where appropriate
+> - Centralized Error Handling
+> - Validation Middleware
+> - Environment Configuration
+> - Logger
+> - Modular Folder Structure
+>
+> Implement these APIs:
+> - POST /api/auth/register
+> - POST /api/auth/login
+> - GET /api/vehicles
+> - GET /api/vehicles/search
+> - POST /api/vehicles
+> - PUT /api/vehicles/:id
+> - DELETE /api/vehicles/:id
+> - POST /api/vehicles/:id/purchase
+> - POST /api/vehicles/:id/restock
+>
+> Authentication:
+> - JWT
+> - bcrypt password hashing
+> - Admin/User Roles
+> - Protected Routes
+> - Role-based Authorization
+>
+> Database:
+> - PostgreSQL
+> - Prisma
+> - Proper Relationships
+> - Constraints
+> - Indexes
+> - Migrations
+> - Seed Data
+>
+> Every endpoint should include:
+> - Validation
+> - Meaningful Error Responses
+> - Proper HTTP Status Codes
+> - Unit Tests
+> - Integration Tests
+>
+> Review every implementation like a senior engineer before moving to the next feature.
+
+### 2. Senior Software Engineer & Strict Code Review
+**User Prompt:**
+> Act as a senior software engineer (15+ years, full-stack) doing a formal code review before this ships to production. Be strict — review it like you're blocking a merge to main, not being polite.
+>
+> Review against:
+> 1. Correctness — logic bugs, edge cases, race conditions, null/undefined handling
+> 2. Security — injection risks, auth/authorization gaps, secrets in code, unvalidated input
+> 3. Performance — unnecessary re-renders/queries, N+1 problems, memory leaks, algorithmic complexity
+> 4. Architecture — separation of concerns, coupling, naming, whether this follows the existing codebase's patterns
+> 5. Error handling — are failures caught, logged, and surfaced correctly, or silently swallowed
+> 6. Readability/maintainability — would a new engineer understand this in 6 months
+> 7. Test coverage — what's untested, and what tests are missing
+>
+> For each issue found:
+> - Severity: 🔴 Blocker / 🟡 Should-fix / 🟢 Nit
+> - File + line reference
+> - Why it matters (not just "this is bad")
+> - The exact fix, as a code diff
+>
+> Then apply Red-Green-Refactor:
+> - 🔴 RED: list what's currently broken or untested (failing/missing state)
+> - 🟢 GREEN: show the minimal fix/tests needed to get it working correctly
+> - 🔵 REFACTOR: once it's correct, show the clean-up pass for structure/readability — no new behavior
+>
+> Finally, write a conventional commit message (type(scope): summary, with a body explaining what changed and why) for the fixed version, as if this were about to be committed.
+
+---
+
+## Interactive Feature Development
+
 This document contains the comprehensive chat history and prompts used to interact with the AI assistant during the development of the AutoDrive Car Dealership Inventory System. It illustrates the iterative development workflow, encompassing structural changes, UI/UX polish, bug fixes, and backend logic improvements.
 
 ## 1. Initial UI Structure & Theming
