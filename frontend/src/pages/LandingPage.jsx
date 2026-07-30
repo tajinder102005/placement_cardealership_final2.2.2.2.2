@@ -11,14 +11,14 @@ const FONTS = `
 `;
 
 const COLORS = {
-    asphalt: "#0B0D10",
-    asphalt2: "#15181D",
-    asphalt3: "#1D2127",
-    line: "#2A2F37",
-    chrome: "#AEB4BD",
+    asphalt: "#000000",
+    asphalt2: "#0a0805",
+    asphalt3: "#14110a",
+    line: "#2a2211",
+    chrome: "#c4bcae",
     paper: "#F4F2ED",
-    amber: "#FF7A1A",
-    amberDim: "#7A3F14",
+    amber: "#d4af37", // Gold
+    amberDim: "#6b581b",
     green: "#4ADE80",
     red: "#F16565",
 };
@@ -363,7 +363,7 @@ export default function LandingPage() {
 const CSS = `
 * { box-sizing: border-box; }
 .lw-root {
-  background: ${COLORS.asphalt};
+  background: linear-gradient(135deg, #110e05 0%, #000000 100%);
   color: ${COLORS.paper};
   font-family: 'Inter', sans-serif;
   min-height: 100vh;

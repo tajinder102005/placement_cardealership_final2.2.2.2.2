@@ -159,7 +159,7 @@ const Dashboard = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Car size={28} style={{ color: 'var(--accent-color)' }} />
           <div>
-            <h1 style={{ fontSize: '1.4rem', fontWeight: 800, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>AutoDrive Showroom</h1>
+            <h1 style={{ fontSize: '1.4rem', fontWeight: 800, background: 'linear-gradient(135deg, #d4af37, #fcd555)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>AutoDrive Showroom</h1>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', margin: 0 }}>Welcome, <strong style={{ color: 'var(--text-secondary)' }}>{user?.name}</strong> · <span style={{ color: user?.role === 'admin' ? '#f59e0b' : 'var(--accent-color)', textTransform: 'capitalize' }}>{user?.role}</span></p>
           </div>
         </div>
