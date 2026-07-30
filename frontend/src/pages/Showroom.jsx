@@ -45,6 +45,7 @@ const Showroom = () => {
 
   const filtered = useMemo(() => {
     let result = [...vehicles];
+
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
       result = result.filter(
@@ -58,12 +59,14 @@ const Showroom = () => {
     if (minPrice) result = result.filter((v) => Number(v.price) >= parseFloat(minPrice));
     if (maxPrice) result = result.filter((v) => Number(v.price) <= parseFloat(maxPrice));
     if (availableOnly) result = result.filter((v) => v.quantity > 0);
+
     switch (sortBy) {
       case 'price-asc': result.sort((a, b) => Number(a.price) - Number(b.price)); break;
       case 'price-desc': result.sort((a, b) => Number(b.price) - Number(a.price)); break;
       case 'name': result.sort((a, b) => `${a.make} ${a.model}`.localeCompare(`${b.make} ${b.model}`)); break;
       default: break;
     }
+
     return result;
   }, [vehicles, searchTerm, category, minPrice, maxPrice, sortBy, availableOnly]);
 
@@ -82,6 +85,7 @@ const Showroom = () => {
 
   const handleSave = async (formData, imageFile) => {
     let imageUrl = formData.image_url;
+
     if (imageFile) {
       const ext = imageFile.name.split('.').pop();
       const fileName = `${Date.now()}.${ext}`;
@@ -92,18 +96,26 @@ const Showroom = () => {
       const { data: { publicUrl } } = supabase.storage.from('vehicle-images').getPublicUrl(data.path);
       imageUrl = publicUrl;
     }
+
     const payload = {
-      make: formData.make, model: formData.model, category: formData.category,
-      year: parseInt(formData.year), price: parseFloat(formData.price),
-      quantity: parseInt(formData.quantity), description: formData.description,
-      image_url: imageUrl || null, created_by: user.id
+      make: formData.make,
+      model: formData.model,
+      category: formData.category,
+      year: parseInt(formData.year),
+      price: parseFloat(formData.price),
+      quantity: parseInt(formData.quantity),
+      description: formData.description,
+      image_url: imageUrl || null,
+      created_by: user.id
     };
+
     let error;
     if (vehicleModal?.id) {
       ({ error } = await supabase.from('vehicles').update(payload).eq('id', vehicleModal.id));
     } else {
       ({ error } = await supabase.from('vehicles').insert(payload));
     }
+
     if (error) { toast.error(error.message); return; }
     toast.success(vehicleModal?.id ? 'Vehicle updated!' : 'Vehicle added!');
     setVehicleModal(null);
@@ -113,7 +125,8 @@ const Showroom = () => {
   const handleRestock = async (e) => {
     e.preventDefault();
     const { error } = await supabase.rpc('restock_vehicle', {
-      _vehicle_id: restockModal.id, _quantity: parseInt(restockAmount)
+      _vehicle_id: restockModal.id,
+      _quantity: parseInt(restockAmount)
     });
     if (error) { toast.error(error.message); return; }
     toast.success('Vehicle restocked!');
@@ -130,23 +143,23 @@ const Showroom = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
+    <div className="min-h-screen bg-dark-950">
       <Navbar />
 
       <div className="mx-auto max-w-7xl px-6 py-8">
         <div className="mb-6 flex items-end justify-between">
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-white">Showroom</h1>
-            <p className="mt-1 text-[13px] text-[#555]">
+            <h1 className="text-3xl font-extrabold text-white">Showroom</h1>
+            <p className="mt-1 text-sm text-gray-500">
               {filtered.length} of {vehicles.length} vehicles shown
             </p>
           </div>
           {isAdmin && (
             <button
               onClick={() => setVehicleModal({})}
-              className="flex h-10 items-center gap-2 rounded-xl bg-orange-500 px-5 text-[13px] font-semibold text-white transition-colors duration-200 hover:bg-orange-600"
+              className="flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
             >
-              <Plus size={15} /> Add vehicle
+              <Plus size={16} /> Add vehicle
             </button>
           )}
         </div>
@@ -165,11 +178,11 @@ const Showroom = () => {
         </div>
 
         {loading ? (
-          <div className="py-24 text-center text-[13px] text-[#555]">Loading vehicles...</div>
+          <div className="py-20 text-center text-gray-500">Loading vehicles...</div>
         ) : filtered.length === 0 ? (
-          <div className="py-24 text-center text-[13px] text-[#555]">No vehicles match your filters.</div>
+          <div className="py-20 text-center text-gray-500">No vehicles match your filters.</div>
         ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filtered.map((v) => (
               <VehicleCard
                 key={v.id}
@@ -185,10 +198,10 @@ const Showroom = () => {
         )}
       </div>
 
-      <footer className="mt-16 border-t border-white/[0.04] py-6">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 text-[11px] text-[#444]">
+      <footer className="border-t border-white/5 py-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 text-xs text-gray-500">
           <span>🚗 Torque Motors — dealership inventory system</span>
-          <span>Built as a TDD kata · REST API + React SPA</span>
+          <span>Built as a TDD kata · REST API + React SPA · API Reference</span>
         </div>
       </footer>
 

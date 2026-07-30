@@ -1,11 +1,11 @@
 import React from 'react';
 
 const StatCard = ({ label, value }) => (
-  <div className="rounded-xl border border-white/[0.06] bg-[#111] px-5 py-4">
-    <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#555]">
+  <div className="rounded-xl border border-white/10 bg-dark-800 px-5 py-4">
+    <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-gray-500">
       {label}
     </p>
-    <p className="text-xl font-bold tracking-tight text-white">{value}</p>
+    <p className="text-2xl font-bold text-white">{value}</p>
   </div>
 );
 
