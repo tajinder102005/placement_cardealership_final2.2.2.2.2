@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import {
-  LogOut, Plus, Trash2, Edit3, ShoppingBag, PlusCircle,
+  LogOut, Plus, Trash2, Edit3, ShoppingBag, PackagePlus,
   Search, RefreshCw, Car, Upload, Link2
 } from 'lucide-react';
 import './AuthStyles.css';
@@ -21,9 +21,7 @@ const Dashboard = () => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isRestockOpen, setIsRestockOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
-  const [restockAmount, setRestockAmount] = useState(1);
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [imageMode, setImageMode] = useState('url');
   const [imageFile, setImageFile] = useState(null);
@@ -76,15 +74,13 @@ const Dashboard = () => {
     fetchVehicles();
   };
 
-  const handleRestock = async (e) => {
-    e.preventDefault();
+  const handleRestock = async (vehicleId) => {
     const { error } = await supabase.rpc('restock_vehicle', {
-      _vehicle_id: selectedVehicle.id,
-      _quantity: parseInt(restockAmount)
+      _vehicle_id: vehicleId,
+      _quantity: 1
     });
     if (error) { toast.error(error.message); return; }
-    toast.success('Vehicle restocked!');
-    setIsRestockOpen(false);
+    toast.success('Added 1 unit to stock!');
     fetchVehicles();
   };
 
@@ -246,9 +242,9 @@ const Dashboard = () => {
                       </button>
                       {isAdmin && (
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-                          <button onClick={() => openEdit(v)} className="authButton" style={{ padding: '7px', backgroundColor: 'var(--border-color)', fontSize: '0.78rem' }}><Edit3 size={13} /> Edit</button>
-                          <button onClick={() => { setSelectedVehicle(v); setRestockAmount(1); setIsRestockOpen(true); }} className="authButton" style={{ padding: '7px', backgroundColor: 'var(--border-color)', fontSize: '0.78rem' }}><PlusCircle size={13} /> Stock</button>
-                          <button onClick={() => handleDelete(v.id)} className="authButton" style={{ padding: '7px', backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid var(--error-color)', color: 'var(--error-color)', fontSize: '0.78rem' }}><Trash2 size={13} /></button>
+                          <button onClick={() => openEdit(v)} className="authButton" style={{ padding: '7px', backgroundColor: 'var(--border-color)', fontSize: '0.78rem' }} title="Edit"><Edit3 size={13} /></button>
+                          <button onClick={() => handleRestock(v.id)} className="authButton" style={{ padding: '7px', backgroundColor: 'var(--border-color)', fontSize: '0.78rem' }} title="Instant Restock (+1)"><PackagePlus size={13} /></button>
+                          <button onClick={() => handleDelete(v.id)} className="authButton" style={{ padding: '7px', backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid var(--error-color)', color: 'var(--error-color)', fontSize: '0.78rem' }} title="Delete"><Trash2 size={13} /></button>
                         </div>
                       )}
                     </div>
@@ -326,24 +322,6 @@ const Dashboard = () => {
         </div>
       )}
 
-      {isRestockOpen && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(6px)' }}>
-          <div className="authCard" style={{ width: '400px' }}>
-            <h2 className="authTitle" style={{ marginBottom: '20px' }}>Restock Vehicle</h2>
-            <form onSubmit={handleRestock}>
-              <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>Restocking: <strong style={{ color: 'var(--text-primary)' }}>{selectedVehicle?.make} {selectedVehicle?.model}</strong></p>
-              <div className="formGroup">
-                <label className="formLabel">Quantity to Add</label>
-                <input type="number" required min="1" className="formInput" value={restockAmount} onChange={e => setRestockAmount(parseInt(e.target.value))} style={{ padding: '9px 12px' }} />
-              </div>
-              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                <button type="submit" className="authButton">Restock</button>
-                <button type="button" onClick={() => setIsRestockOpen(false)} className="authButton" style={{ backgroundColor: 'var(--border-color)' }}>Cancel</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
