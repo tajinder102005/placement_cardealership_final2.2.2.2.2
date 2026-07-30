@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import {
     Car, Scan, Radio, ImageIcon, Building2, BellRing, ArrowRight, X,
     Mail, Lock, User, ChevronRight, Gauge, MapPin, CheckCircle2,
+    Layers, Package, AlertTriangle, DollarSign
 } from "lucide-react";
 
 const FONTS = `
@@ -23,13 +24,11 @@ const COLORS = {
     red: "#F16565",
 };
 
-const VEHICLES = [
-    { stock: "A2291", vin: "1FTFW1E5XNFB29910", year: 2024, make: "Ford", model: "F-150 Lariat", price: 52480, days: 4, status: "available" },
-    { stock: "A2277", vin: "5YJ3E1EA9PF391882", year: 2024, make: "Tesla", model: "Model 3 Long Range", price: 44990, days: 11, status: "pending" },
-    { stock: "A2265", vin: "1HGCV1F31NA019442", year: 2023, make: "Honda", model: "Accord Sport", price: 27995, days: 2, status: "available" },
-    { stock: "A2201", vin: "3GNAXUEV5NL105521", year: 2023, make: "Chevrolet", model: "Equinox RS", price: 31240, days: 28, status: "available" },
-    { stock: "A2158", vin: "WBA5R7C50ND012113", year: 2022, make: "BMW", model: "330i xDrive", price: 38750, days: 6, status: "sold" },
-    { stock: "A2299", vin: "JTMB6RFV0PD112837", year: 2024, make: "Toyota", model: "RAV4 XLE", price: 33110, days: 1, status: "available" },
+const CARDS = [
+    { id: 1, make: "Ford", model: "F-150 Lariat", year: 2024, vin: "A2291", price: "$52,480", status: "Available", statusColor: COLORS.amber, delay: 0 },
+    { id: 2, make: "Tesla", model: "Model 3 LR", year: 2024, vin: "A2277", price: "$44,990", status: "Pending", statusColor: COLORS.chrome, delay: 1.5 },
+    { id: 3, make: "Honda", model: "Accord Sport", year: 2023, vin: "A2265", price: "$27,995", status: "Available", statusColor: COLORS.amber, delay: 3 },
+    { id: 4, make: "BMW", model: "330i xDrive", year: 2022, vin: "A2158", price: "$38,750", status: "Sold", statusColor: COLORS.chrome, delay: 4.5 },
 ];
 
 const FEATURES = [
@@ -66,24 +65,25 @@ function useCounter(target, inView, duration = 1400) {
     return value;
 }
 
-function Stat({ value, suffix = "", label, decimals = 0 }) {
-    const ref = useRef(null);
-    const inView = useInView(ref, { once: true, margin: "-80px" });
-    const count = useCounter(value, inView);
-    const display = decimals ? (count / Math.pow(10, decimals)).toFixed(decimals) : count.toLocaleString();
+function Stat({ value, label, icon: Icon }) {
     return (
-        <div ref={ref} className="lw-stat">
-            <div className="lw-stat-value">{display}{suffix}</div>
-            <div className="lw-stat-label">{label}</div>
+        <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+            <div style={{ background: 'rgba(212, 175, 55, 0.1)', width: '38px', height: '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-color)' }}>
+                {Icon && <Icon size={18} />}
+            </div>
+            <div>
+                <div style={{ fontSize: '2.2rem', fontWeight: 800, lineHeight: 1, color: COLORS.paper }}>{value}</div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '8px' }}>{label}</div>
+            </div>
         </div>
     );
 }
 
 function StatusBadge({ status }) {
     const map = {
-        available: { color: COLORS.green, label: "Available" },
-        pending: { color: COLORS.amber, label: "Pending" },
-        sold: { color: COLORS.chrome, label: "Sold" },
+        Available: { color: COLORS.green, label: "Available" },
+        Pending: { color: COLORS.amber, label: "Pending" },
+        Sold: { color: COLORS.chrome, label: "Sold" },
     };
     const s = map[status];
     return (
@@ -91,7 +91,7 @@ function StatusBadge({ status }) {
             <motion.span
                 className="lw-badge-dot"
                 style={{ background: s.color }}
-                animate={status !== "sold" ? { opacity: [1, 0.35, 1] } : {}}
+                animate={status !== "Sold" ? { opacity: [1, 0.35, 1] } : {}}
                 transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
             />
             {s.label}
@@ -99,34 +99,11 @@ function StatusBadge({ status }) {
     );
 }
 
-function VehicleSticker({ v, index }) {
-    return (
-        <motion.div
-            className="lw-sticker"
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.5, delay: index * 0.06 }}
-        >
-            <div className="lw-sticker-top">
-                <span className="lw-mono lw-stock">STK {v.stock}</span>
-                <StatusBadge status={v.status} />
-            </div>
-            <div className="lw-sticker-title">{v.year} {v.make} {v.model}</div>
-            <div className="lw-mono lw-vin">VIN {v.vin}</div>
-            <div className="lw-sticker-bottom">
-                <span className="lw-price">${v.price.toLocaleString()}</span>
-                <span className="lw-days">{v.days} day{v.days === 1 ? "" : "s"} on lot</span>
-            </div>
-        </motion.div>
-    );
-}
-
 function FloatingCard({ v, style, delay }) {
     return (
         <motion.div
             className="lw-floating-card"
-            style={style}
+            style={{...style, borderColor: COLORS.paper + "33"}}
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: [0, -14, 0] }}
             transition={{
@@ -135,12 +112,12 @@ function FloatingCard({ v, style, delay }) {
             }}
         >
             <div className="lw-floating-top">
-                <span className="lw-mono">{v.stock}</span>
-                <span className="lw-floating-dot" style={{ background: v.status === "available" ? COLORS.green : COLORS.amber }} />
+                <span className="lw-mono">{v.vin}</span>
+                <span className="lw-floating-dot" style={{ background: v.statusColor }} />
             </div>
             <div className="lw-floating-title">{v.year} {v.make}</div>
             <div className="lw-floating-model">{v.model}</div>
-            <div className="lw-mono lw-floating-price">${v.price.toLocaleString()}</div>
+            <div className="lw-mono lw-floating-price">{v.price}</div>
         </motion.div>
     );
 }
@@ -172,8 +149,7 @@ function Hero({ onGetStarted }) {
                     transition={{ duration: 0.6 }}
                     className="lw-eyebrow"
                 >
-                    <span className="lw-eyebrow-dot" />
-                    Built for dealership inventory teams
+                    <span className="lw-hero-badge"><span className="lw-dot" style={{ backgroundColor: COLORS.amber }}></span> Torque Motors Showroom</span>
                 </motion.div>
                 <motion.h1
                     initial={{ opacity: 0, y: 24 }}
@@ -181,7 +157,7 @@ function Hero({ onGetStarted }) {
                     transition={{ duration: 0.7, delay: 0.1 }}
                     className="lw-h1"
                 >
-                    Every vehicle,<br />tracked to the VIN.
+                    Every vehicle <span style={{ color: COLORS.amber }}>on the floor</span>, tracked in real time.
                 </motion.h1>
                 <motion.p
                     initial={{ opacity: 0, y: 20 }}
@@ -189,8 +165,7 @@ function Hero({ onGetStarted }) {
                     transition={{ duration: 0.7, delay: 0.2 }}
                     className="lw-hero-sub"
                 >
-                    Lotwise is the inventory system dealerships run their lot on — from intake scan
-                    to final sale, across as many locations as you've got.
+                    Torque Motors keeps stock, pricing and sales in sync. Browse the showroom, filter down to the exact spec, and purchase the moment a unit is available.
                 </motion.p>
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -207,14 +182,12 @@ function Hero({ onGetStarted }) {
                 </motion.div>
             </div>
 
-            <FloatingCard v={VEHICLES[0]} delay={0.5} style={{ top: "14%", right: "8%" }} />
-            <FloatingCard v={VEHICLES[2]} delay={0.9} style={{ top: "52%", right: "20%" }} />
-            <FloatingCard v={VEHICLES[5]} delay={1.2} style={{ top: "34%", right: "34%" }} />
+            <FloatingCard v={CARDS[0]} delay={0.5} style={{ top: "14%", right: "8%" }} />
+            <FloatingCard v={CARDS[1]} delay={0.9} style={{ top: "52%", right: "20%" }} />
+            <FloatingCard v={CARDS[2]} delay={1.2} style={{ top: "34%", right: "34%" }} />
         </section>
     );
 }
-
-// Removed internal Modal component
 
 export default function LandingPage() {
     const navigate = useNavigate();
@@ -240,7 +213,6 @@ export default function LandingPage() {
                     <nav className="lw-nav-links">
                         <a href="#features">Features</a>
                         <a href="#how">How it works</a>
-                        <a href="#inventory">Live board</a>
                     </nav>
                     <div className="lw-nav-actions">
                         <button className="lw-btn-ghost lw-btn-small" onClick={() => navigate("/login")}>Log in</button>
@@ -251,11 +223,17 @@ export default function LandingPage() {
 
             <Hero onGetStarted={(type) => navigate(type === 'login' ? '/login' : '/register')} />
 
-            <section className="lw-stats-bar">
-                <Stat value={214000} suffix="+" label="Vehicles tracked" />
-                <Stat value={41} suffix="%" label="Avg. faster time-to-list" />
-                <Stat value={860} suffix="+" label="Dealerships on Lotwise" />
-                <Stat value={998} decimals={1} suffix="%" label="Uptime last 12 months" />
+            <section className="lw-stats-bar" style={{ padding: '60px 5%', maxWidth: '1200px', margin: '0 auto' }}>
+                <div style={{ marginBottom: '32px' }}>
+                    <h2 style={{ fontSize: '1.8rem', fontWeight: 700, marginBottom: '6px', color: COLORS.paper }}>Showroom overview</h2>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>Welcome to Torque Motors — here's how the lot is looking today.</p>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                    <Stat value="11" label="Models listed" icon={Layers} />
+                    <Stat value="61" label="Units in stock" icon={Package} />
+                    <Stat value="0" label="Sold out" icon={AlertTriangle} />
+                    <Stat value="$30.53M" label="Floor value" icon={DollarSign} />
+                </div>
             </section>
 
             <section id="features" className="lw-section">
@@ -311,49 +289,9 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            <section id="inventory" className="lw-section">
-                <div className="lw-section-head">
-                    <span className="lw-kicker">Live board</span>
-                    <h2 className="lw-h2">What your team sees, in real time</h2>
-                    <p className="lw-section-sub">A sample board — every card updates the moment status changes on the lot.</p>
-                </div>
-                <div className="lw-inventory-grid">
-                    {VEHICLES.map((v, i) => <VehicleSticker key={v.stock} v={v} index={i} />)}
-                </div>
-            </section>
-
-            <section className="lw-quote-section">
-                <motion.div
-                    className="lw-quote-plate"
-                    initial={{ opacity: 0, scale: 0.96 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5 }}
-                >
-                    <CheckCircle2 size={20} color={COLORS.amber} />
-                    <p>
-                        "We stopped finding out a car sold from the customer instead of our own system.
-                        That alone paid for Lotwise in the first month."
-                    </p>
-                    <span className="lw-quote-attr">— Inventory Manager, 4-location dealer group</span>
-                </motion.div>
-            </section>
-
-            <section className="lw-cta-footer">
-                <MapPin size={22} color={COLORS.amber} style={{ marginBottom: 14 }} />
-                <h2 className="lw-h2">Get your lot on one board</h2>
-                <p className="lw-section-sub">Set up takes an afternoon. Most teams import their first stock the same day.</p>
-                <button className="lw-btn-primary lw-btn-large" onClick={() => navigate("/register")}>
-                    Start free trial <ArrowRight size={18} strokeWidth={2.5} />
-                </button>
-            </section>
-
             <footer className="lw-footer">
-                <div className="lw-logo lw-footer-logo">
-                    <span className="lw-logo-mark"><Car size={16} strokeWidth={2.5} /></span>
-                    Lotwise
-                </div>
-                <span className="lw-footer-copy">Inventory software for dealership lots.</span>
+                <div className="lw-logo"><Car size={20} color={COLORS.amber} /> Torque Motors</div>
+                <span className="lw-footer-copy">Premium dealership software.</span>
             </footer>
 
         </div>
@@ -362,6 +300,7 @@ export default function LandingPage() {
 
 const CSS = `
 * { box-sizing: border-box; }
+:root { --bg-secondary: ${COLORS.asphalt2}; --border-color: ${COLORS.line}; --accent-color: ${COLORS.amber}; --text-secondary: ${COLORS.chrome}; --text-muted: #888; }
 .lw-root {
   background: linear-gradient(135deg, #110e05 0%, #000000 100%);
   color: ${COLORS.paper};
@@ -370,6 +309,8 @@ const CSS = `
   overflow-x: hidden;
 }
 .lw-mono { font-family: 'IBM Plex Mono', monospace; }
+.lw-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+.lw-hero-badge { background: ${COLORS.asphalt3}; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1px solid ${COLORS.line}; }
 
 /* NAV */
 .lw-nav {
@@ -413,7 +354,6 @@ const CSS = `
   box-shadow: 0 0 0 0 rgba(255,122,26,0);
 }
 .lw-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px -8px ${COLORS.amber}aa; }
-.lw-btn-large { padding: 15px 26px; font-size: 16px; margin-top: 22px; }
 .lw-btn-small { padding: 9px 16px; font-size: 13.5px; }
 .lw-btn-ghost {
   background: transparent; color: ${COLORS.paper};
@@ -446,7 +386,6 @@ const CSS = `
   font-size: 13px; font-weight: 600; color: ${COLORS.amber};
   letter-spacing: 0.03em; margin-bottom: 22px;
 }
-.lw-eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: ${COLORS.amber}; }
 .lw-h1 {
   font-family: 'Oswald', sans-serif; font-weight: 700; text-transform: uppercase;
   font-size: 58px; line-height: 1.04; letter-spacing: 0.005em; margin: 0 0 22px;
@@ -456,7 +395,7 @@ const CSS = `
 
 .lw-floating-card {
   position: absolute; width: 188px; background: ${COLORS.asphalt2};
-  border: 1px solid ${COLORS.line}; border-radius: 12px; padding: 14px;
+  border: 1px solid; border-radius: 12px; padding: 14px;
   box-shadow: 0 20px 40px -18px rgba(0,0,0,0.6);
   display: none;
 }
@@ -469,19 +408,6 @@ const CSS = `
 @media (min-width: 980px) {
   .lw-floating-card { display: block; }
 }
-
-/* STATS */
-.lw-stats-bar {
-  max-width: 1100px; margin: -90px auto 0; position: relative; z-index: 3;
-  background: ${COLORS.asphalt2}; border: 1px solid ${COLORS.line}; border-radius: 16px;
-  padding: 30px 20px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px;
-}
-@media (min-width: 780px) { .lw-stats-bar { grid-template-columns: repeat(4, 1fr); } }
-.lw-stat { text-align: center; }
-.lw-stat-value {
-  font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 32px; color: ${COLORS.amber};
-}
-.lw-stat-label { font-size: 12.5px; color: ${COLORS.chrome}; margin-top: 4px; }
 
 /* SECTIONS */
 .lw-section { max-width: 1100px; margin: 0 auto; padding: 120px 24px 0; }
@@ -521,35 +447,6 @@ const CSS = `
 .lw-step h3 { font-size: 18px; font-weight: 600; margin: 0 0 6px; font-family: 'Oswald', sans-serif; }
 .lw-step p { color: ${COLORS.chrome}; font-size: 15px; line-height: 1.6; margin: 0; max-width: 520px; }
 
-/* INVENTORY STICKERS */
-.lw-inventory-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
-@media (min-width: 720px) { .lw-inventory-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1020px) { .lw-inventory-grid { grid-template-columns: repeat(3, 1fr); } }
-.lw-sticker {
-  background: ${COLORS.asphalt2}; border: 1px solid ${COLORS.line}; border-radius: 12px;
-  padding: 18px; position: relative;
-}
-.lw-sticker-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.lw-stock { font-size: 12px; color: ${COLORS.chrome}; }
-.lw-badge {
-  display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600;
-  border: 1px solid; border-radius: 20px; padding: 3px 10px;
-}
-.lw-badge-dot { width: 6px; height: 6px; border-radius: 50%; }
-.lw-sticker-title { font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 17px; margin-bottom: 6px; }
-.lw-vin { font-size: 11.5px; color: ${COLORS.chrome}; margin-bottom: 16px; }
-.lw-sticker-bottom { display: flex; justify-content: space-between; align-items: baseline; border-top: 1px dashed ${COLORS.line}; padding-top: 12px; }
-.lw-price { font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: ${COLORS.amber}; font-size: 16px; }
-.lw-days { font-size: 12px; color: ${COLORS.chrome}; }
-
-/* QUOTE */
-.lw-quote-section { max-width: 780px; margin: 130px auto 0; padding: 0 24px; }
-.lw-quote-plate {
-  background: ${COLORS.asphalt2}; border: 1px solid ${COLORS.line}; border-radius: 16px;
-  padding: 38px; text-align: center;
-}
-.lw-quote-plate p { font-size: 20px; line-height: 1.55; font-family: 'Oswald', sans-serif; font-weight: 500; margin: 14px 0 14px; }
-.lw-quote-attr { font-size: 13px; color: ${COLORS.chrome}; }
 
 /* CTA FOOTER */
 .lw-cta-footer { text-align: center; max-width: 620px; margin: 130px auto 0; padding: 0 24px 120px; }
