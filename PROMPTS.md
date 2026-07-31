@@ -2,11 +2,9 @@
 
 ## Core Development Prompts
 
-### 1. Principal Software Engineer & Architecture Setup
-**User Prompt:**
-> Act as a Principal Software Engineer at Google with 15+ years of experience building scalable backend systems.
->
-> Build a production-ready backend for a Car Dealership Inventory System using Node.js, TypeScript, Express.js, PostgreSQL, Prisma ORM, JWT Authentication, bcrypt, Jest, and Supertest.
+
+
+> Build a production-ready backend for a Car Dealership Inventory System using Node.js, TypeScript, Express.js, PostgreSQL, Mongodb, JWT Authentication, bcrypt, Jest, and Supertest.
 >
 > This project MUST strictly follow Test-Driven Development (TDD):
 > - Write failing tests before implementation.
@@ -62,10 +60,7 @@
 >
 > Review every implementation like a senior engineer before moving to the next feature.
 
-### 2. Senior Software Engineer & Strict Code Review
-**User Prompt:**
-> Act as a senior software engineer (15+ years, full-stack) doing a formal code review before this ships to production. Be strict — review it like you're blocking a merge to main, not being polite.
->
+
 > Review against:
 > 1. Correctness — logic bugs, edge cases, race conditions, null/undefined handling
 > 2. Security — injection risks, auth/authorization gaps, secrets in code, unvalidated input
@@ -94,44 +89,296 @@
 
 This document contains the comprehensive chat history and prompts used to interact with the AI assistant during the development of the AutoDrive Car Dealership Inventory System. It illustrates the iterative development workflow, encompassing structural changes, UI/UX polish, bug fixes, and backend logic improvements.
 
-## 1. Initial UI Structure & Theming
-- **User Prompt:** `"revert back the same things i do not liek i want the same code as before"`
-  - *Context:* Used to undo an experimental AI change and restore a stable layout state.
-- **User Prompt:** `"can you intregete the landing page here in the project i have the code for the landing page..."`
-  - *Context:* Requested the AI to merge a separate React landing page file into the main application routing structure.
-- **User Prompt:** `"can you change the whole ui of the project into black and golden color, gradient whole ui"`
-  - *Context:* Establishing the primary premium aesthetic. The AI generated CSS variables and updated component styles to reflect this.
 
-## 2. Copywriting & Content Management
-- **User Prompt:** `"change the name of lotwise to AutoDrive //also remove the box from the red places... Torque Motors Showroom Every vehicle on the floor, tracked in real time."`
-  - *Context:* Rebranding the application and adjusting hero text layout to remove bounding boxes and improve visual flow.
+1. Project Planning & Architecture
+Act as a Senior Full Stack Software Architect.
 
-## 3. Advanced Layout & Professional Alignment
-- **User Prompt:** `"can you make it 4 to 3 card per row while it should be perfectly aldignment with professtional format and alignment"`
-  - *Context:* Instructed the AI to use CSS Grid (`auto-fit`, `minmax`) to properly align the vehicle inventory cards on the dashboard, scaling dynamically between 3 and 4 columns based on viewport width.
-- **User Prompt:** `"add a footer also in the admin , user dashboard , proffestional website footer saying 'Made by TAJINDER SINGH (THE IMMACULATE DEVELOPER)'"`
-  - *Context:* Adding a persistent custom footer to all main views.
+Help me build a production-ready Car Dealership Inventory System that follows enterprise software engineering practices.
 
-## 4. Visual Enhancements & Micro-Interactions
-- **User Prompt:** `"use this image as the background of 2nd page of the landing page only on the 2nd page with a very little opacitty"`
-- **User Prompt:** `"increase the opacity by 20%"`
-- **User Prompt:** `"same opacity as 2nd imahe"`
-  - *Context:* Working iteratively with the AI to insert a background image into a specific scroll section, tweak CSS overlays, and adjust visual opacity until perfect contrast was achieved.
+Project Requirements
+- MERN Stack (MongoDB, Express.js, React, Node.js)
+- TypeScript
+- JWT Authentication
+- Tailwind CSS
+- Framer Motion
+- Jest + Supertest
+- React Testing Library
+- RESTful API
+- Test-Driven Development (TDD)
+- SOLID Principles
+- Clean Architecture
+- Feature-based folder structure
+- Git best practices
+- Responsive design
 
-## 5. Complex UI Components (Search & Filter)
-- **User Prompt:** `"gap from the above page section also scroll when person click on the categories able to see suv, sports, hatachback, hypercar..."`
-- **User Prompt:** `"kind of this take this aligment also be perfect like a professtional"` *(User attached a mockup image of a specific dropdown UI)*
-  - *Context:* Instructed the AI to refactor the basic text-input search form into a robust row of interactive dropdowns, matching a provided professional mockup.
+First, design the complete project architecture.
 
-## 6. Performance Optimization & UX Bug Fixes
-- **User Prompt:** `"when ever i click on the purchase or increas the quality the whole section blink or refersh it should not be doing like this just update the count not referesh the whole section"`
-  - *Context:* Addressed a UX issue where the frontend was triggering a full data refetch and rendering a loading state upon every purchase. The AI was prompted to implement Optimistic UI Updates in React to instantly mutate the state while running the database call in the background.
+Include:
+- Folder structure
+- Tech stack decisions
+- Component architecture
+- Backend architecture
+- API flow
+- Authentication flow
+- Database flow
+- State management
+- Testing strategy
 
-## 7. Final Polish & Technical Audits
-- **User Prompt:** `"use black and golden 100% color contrast in whole website golden 100% gradient appealing"`
-  - *Context:* Final visual sweep. The AI updated root CSS variables to inject a rich `linear-gradient` gold and ensured all text on buttons was pure `#000000` for 100% contrast.
-- **User Prompt:** `"are we are using elastic search in the project"`
-  - *Context:* Auditing the backend. The AI reviewed the code and confirmed that searching was being handled natively via PostgreSQL `ilike` operators in Supabase, eliminating the need for an external Elasticsearch cluster.
+Do not write application code yet.
+2. UI/UX Design System & Landing Page
+Act as a Senior UI/UX Designer.
+
+Design a premium SaaS landing page for a Car Dealership Inventory Management System.
+
+Theme:
+- Luxury Automotive
+- Black (#0B0B0D)
+- Charcoal (#16181D)
+- Ferrari Red (#D62828)
+- White
+- Glassmorphism
+- Soft gradients
+- Large typography
+
+Build:
+- Sticky Navbar
+- Hero Section
+- Trusted Stats
+- Features
+- How It Works
+- Product Preview (blurred dashboard only)
+- Testimonials
+- Pricing
+- FAQ
+- CTA
+- Footer
+- Login Modal
+- Signup Modal
+
+Requirements:
+- React
+- Tailwind CSS
+- Framer Motion
+- Lucide Icons
+- Fully Responsive
+- Premium animations
+- Do NOT build the actual dashboard.
+3. Authentication System
+Build a complete authentication system using Test-Driven Development.
+
+Requirements:
+- Register
+- Login
+- JWT Authentication
+- Password Hashing (bcrypt)
+- Protected Routes
+- Role-Based Access (Admin/User)
+- Input Validation
+- Error Handling
+
+Backend:
+POST /api/auth/register
+POST /api/auth/login
+
+Frontend:
+- Login Page
+- Signup Page
+- Validation
+- Loading states
+- Success/Error Toasts
+
+Write tests before implementation.
+4. MongoDB Database Design
+Design the MongoDB database for the Car Dealership Inventory System.
+
+Collections:
+- Users
+- Vehicles
+- Purchases
+
+Vehicle fields:
+- make
+- model
+- category
+- year
+- VIN
+- color
+- fuelType
+- transmission
+- mileage
+- price
+- quantity
+- description
+- images
+- status
+- createdAt
+- updatedAt
+
+Provide:
+- ER Diagram
+- Mongoose Schemas
+- Relationships
+- Validation Rules
+- Indexes
+- Best practices
+5. Vehicle Management API
+Build the complete Vehicle Management REST API using TDD.
+
+Endpoints:
+POST /api/vehicles
+GET /api/vehicles
+GET /api/vehicles/:id
+PUT /api/vehicles/:id
+DELETE /api/vehicles/:id
+
+Requirements:
+- Authentication
+- Authorization
+- Validation
+- Pagination
+- Sorting
+- Error Handling
+- Clean Architecture
+
+Write unit and integration tests before implementation.
+6. Inventory & Purchase Module
+Implement inventory management.
+
+Endpoints:
+POST /api/vehicles/:id/purchase
+POST /api/vehicles/:id/restock
+
+Requirements:
+- Reduce stock after purchase
+- Prevent purchases when quantity is zero
+- Admin-only restocking
+- Transaction safety
+- Purchase history
+- Proper validation
+
+Follow TDD and write tests first.
+7. Dashboard (After Login)
+Build a premium dashboard for authenticated users.
+
+Customer Dashboard:
+- Vehicle Grid
+- Search
+- Filters
+- Vehicle Details
+- Purchase Button
+- Pagination
+
+Admin Dashboard:
+- Dashboard Analytics
+- Add Vehicle
+- Update Vehicle
+- Delete Vehicle
+- Restock Vehicle
+- Sales Summary
+- Inventory Overview
+
+Design:
+- Luxury Black & Red Theme
+- Glassmorphism
+- Framer Motion
+- Responsive Layout
+8. Search & Filtering
+Implement advanced search and filtering.
+
+Support:
+- Make
+- Model
+- Category
+- Year
+- Price Range
+- Fuel Type
+- Transmission
+- Availability
+
+Requirements:
+- Backend API filters
+- Debounced frontend search
+- URL query parameters
+- Pagination
+- Sorting
+
+Use React Query or Axios with caching where appropriate.
+9. Testing Strategy (TDD)
+Implement comprehensive testing.
+
+Backend:
+- Jest
+- Supertest
+
+Frontend:
+- React Testing Library
+- Vitest
+
+Cover:
+- Authentication
+- Vehicle CRUD
+- Purchase Flow
+- Protected Routes
+- Search
+- Forms
+- Components
+
+Target at least 90% code coverage and demonstrate Red → Green → Refactor.
+10. Performance & Security
+Optimize the application.
+
+Backend:
+- Helmet
+- CORS
+- Rate Limiting
+- Input Sanitization
+- Secure JWT
+- Environment Variables
+
+Frontend:
+- Lazy Loading
+- Code Splitting
+- Image Optimization
+- Memoization
+- Accessibility (WCAG)
+- SEO
+
+Target:
+- Lighthouse Score >95
+- Fast load times
+- Secure production-ready configuration
+11. Git Workflow & Documentation
+Help me maintain a professional Git workflow.
+
+Requirements:
+- Small feature-based commits
+- Conventional Commits
+- AI Co-author format
+- Pull Request template
+- Branch naming strategy
+
+Generate:
+- README.md
+- Installation Guide
+- Environment Variables
+- API Documentation
+- Project Structure
+- My AI Usage section
+12. Final Review & Production Readiness
+Act as a Senior Software Engineer performing a production code review.
+
+Review the entire project for:
+- SOLID Principles
+- Clean Code
+- TDD compliance
+- API design
+- React best practices
+- UI consistency
+- Accessibility
+- Responsiveness
+- Security
+- Performance
+- Error handling
+- Documentation
 
 ---
-*Note: This log documents the prompt engineering process required to steer the AI in generating boilerplate, refactoring complex components, and debugging state management issues throughout the project lifecycle.*
