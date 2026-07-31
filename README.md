@@ -5,10 +5,17 @@ AutoDrive is a full-stack, single-page application (SPA) built for managing a pr
 ## Project Explanation
 
 The application allows users to browse a real-time list of cars, search by make, model, category, or price, and securely log in. Authenticated users can "purchase" vehicles, which automatically decreases the inventory stock. Admin users possess elevated privileges allowing them to add new vehicles, edit existing vehicle information, delete entries, and restock units directly from the dashboard. 
+# Car Dealership Inventory System (AutoDrive)
+
+AutoDrive is a full-stack, single-page application (SPA) built for managing a premium car dealership's inventory. It serves as a modern, high-contrast platform for users to view available vehicles and for administrators to manage stock, pricing, and vehicle details.
+
+## Project Explanation
+
+The application allows users to browse a real-time list of cars, search by make, model, category, or price, and securely log in. Authenticated users can "purchase" vehicles, which automatically decreases the inventory stock. Admin users possess elevated privileges allowing them to add new vehicles, edit existing vehicle information, delete entries, and restock units directly from the dashboard. 
 
 ### Technology Stack
 - **Frontend:** React, HTML5, CSS3 (with custom pure CSS for a bespoke premium black/gold aesthetic), Vite.
-- **Backend / Database:** Supabase (PostgreSQL) acting as a secure RESTful API and BaaS. Supabase Auth is used for token-based user authentication (JWT), and Supabase Storage is utilized for handling vehicle image uploads.
+- **Backend / Database:** Node.js, Express, and MongoDB. The custom backend serves a secure RESTful API with token-based user authentication (JWT). Vehicle images are encoded as Base64 strings and stored directly within MongoDB documents.
 
 ---
 
@@ -16,58 +23,45 @@ The application allows users to browse a real-time list of cars, search by make,
 
 ### Prerequisites
 - Node.js (v18+)
-- A Supabase Account
+- A MongoDB cluster (e.g., MongoDB Atlas) or a local MongoDB server.
 
-### Backend (Supabase) Setup
-1. Create a new project in [Supabase](https://supabase.com/).
-2. Run the following SQL script in the Supabase SQL Editor to create the `vehicles` table:
-   ```sql
-   CREATE TABLE vehicles (
-       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-       make TEXT NOT NULL,
-       model TEXT NOT NULL,
-       category TEXT,
-       year INTEGER,
-       price NUMERIC,
-       quantity INTEGER DEFAULT 1,
-       description TEXT,
-       image_url TEXT,
-       created_by UUID REFERENCES auth.users(id),
-       created_at TIMESTAMPTZ DEFAULT NOW()
-   );
-   ```
-3. Set up two RPC functions (`purchase_vehicle` and `restock_vehicle`) in the SQL editor to safely increment/decrement stock:
-   ```sql
-   CREATE OR REPLACE FUNCTION purchase_vehicle(_vehicle_id UUID, _quantity INT) RETURNS VOID AS $$
-   BEGIN
-     UPDATE vehicles SET quantity = quantity - _quantity WHERE id = _vehicle_id AND quantity >= _quantity;
-   END;
-   $$ LANGUAGE plpgsql;
-
-   CREATE OR REPLACE FUNCTION restock_vehicle(_vehicle_id UUID, _quantity INT) RETURNS VOID AS $$
-   BEGIN
-     UPDATE vehicles SET quantity = quantity + _quantity WHERE id = _vehicle_id;
-   END;
-   $$ LANGUAGE plpgsql;
-   ```
-4. Create a public storage bucket named `vehicle-images`.
-
-### Frontend Setup
+### Backend Setup
 1. Clone the repository:
    ```bash
-   git clone https://github.com/tajinder102005/placement_cardealership_final2.2.2.2.2.git
-   cd placement_cardealership_final2.2.2.2.2/frontend
+   git clone https://github.com/tajinder102005/mern_carbub.git
+   cd mern_carbub/backend
    ```
 2. Install Node dependencies:
    ```bash
    npm install
    ```
-3. Create a `.env` file in the `frontend/` directory with your Supabase keys:
+3. Create a `.env` file in the `backend/` directory with your MongoDB connection string and JWT secrets:
    ```env
-   VITE_SUPABASE_URL=your_project_url
-   VITE_SUPABASE_ANON_KEY=your_anon_key
+   PORT=5000
+   MONGO_URI=your_mongodb_connection_string
+   JWT_ACCESS_SECRET=your_access_secret
+   JWT_REFRESH_SECRET=your_refresh_secret
+   FRONTEND_URL=http://localhost:5174
    ```
-4. Start the development server:
+4. Start the backend development server:
+   ```bash
+   npm run dev
+   ```
+
+### Frontend Setup
+1. Navigate to the frontend directory from the project root:
+   ```bash
+   cd ../frontend
+   ```
+2. Install Node dependencies:
+   ```bash
+   npm install
+   ```
+3. Create a `.env` file in the `frontend/` directory (if needed):
+   ```env
+   VITE_API_URL=http://localhost:5000/api
+   ```
+4. Start the frontend development server:
    ```bash
    npm run dev
    ```
@@ -125,6 +119,7 @@ Snapshots:   0 total
 Time:        1.45 s
 Ran all test suites.
 ```
+
 
 
 <img width="1881" height="970" alt="image" src="https://github.com/user-attachments/assets/985ea7ad-dc68-4e54-9ef5-d6ad1382ab95" />
