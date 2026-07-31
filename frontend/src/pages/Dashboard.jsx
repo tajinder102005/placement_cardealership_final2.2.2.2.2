@@ -195,7 +195,7 @@ const Dashboard = () => {
       }}>
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(17,14,5,0.95) 100%)',
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.70) 0%, rgba(17,14,5,0.80) 100%)',
           zIndex: 0
         }} />
         
